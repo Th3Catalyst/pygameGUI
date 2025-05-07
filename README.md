@@ -9,7 +9,7 @@ ARGS:
 - text (string): the text displayed
 - font (pygame.font.Font object): text font
 - color (3 tuple): rgb value of the text color
-- (x,y): position of the center of the text
+- (x,y): position of the center of the text  
 In order to make a button, use the following code in the events poll:
 ```
 if event.type == pygame.MOUSEBUTTONUP:     
