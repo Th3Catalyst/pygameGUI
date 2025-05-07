@@ -12,10 +12,10 @@ ARGS:
   (x,y): position of the center of the text
 In order to make a button, use the following code in the events poll:
 `
-if event.type == pygame.MOUSEBUTTONUP:   
-  pos = pygame.mouse.get_pos()   
-  clickedSprites = [s for s in self.all_sprites if s.rect.collidepoint(pos)]  
-  if <YOUR BUTTON> in clickedSprites:   
+if event.type == pygame.MOUSEBUTTONUP:     
+  pos = pygame.mouse.get_pos()     
+  clickedSprites = [s for s in self.all_sprites if s.rect.collidepoint(pos)]    
+  if <YOUR BUTTON> in clickedSprites:     
     <CODE TO RUN ON BUTTON PRESS>
 `
 
