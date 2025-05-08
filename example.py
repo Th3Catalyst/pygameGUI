@@ -24,9 +24,9 @@ quitB = pygameGUI.Text("Quit", font, (255, 255, 255), (640, 450))
 all_sprites.add(quitB)
 
 #makes the menu base with my GUI lib
-menu = pygameGUI.Menu("red", "Choose Game", "white", font, 12*squareWidth + 20, 16*squareWidth+24, image="menuBG.png")
-menu.rect.x = screen.get_width()/2 - 5*squareWidth -10
-menu.rect.y = screen.get_height()/2 - 8*squareWidth -12
+menu = pygameGUI.Menu("red", "Choose Game", "white", font, 12*squareWidth + 20, 16*squareWidth+24, image="menuBG.png",pos=(screen.get_width()/2 - 5*squareWidth -10,screen.get_height()/2 - 8*squareWidth -12))
+'''menu.rect.x = screen.get_width()/2 - 5*squareWidth -10
+menu.rect.y = screen.get_height()/2 - 8*squareWidth -12'''
 all_sprites.add(menu)
 
 #adds the buttons to the menu

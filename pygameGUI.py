@@ -72,7 +72,7 @@ class Text(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 class Menu(Background):
-    def __init__(self, color, title, titlecolor, font, width, height, image = None,defaultC = ""):
+    def __init__(self, color, title, titlecolor, font, width, height, image = None, pos=(0,0),defaultC = ""):
         super().__init__(color, width, height, image, defaultC)
         self.title = title
         self.font = font
@@ -80,6 +80,8 @@ class Menu(Background):
         self.height = height
         self.sprites = pygame.sprite.Group()
         self.titlecolor = titlecolor
+        self.rect.x = pos[0]
+        self.rect.y = pos[1]
     def draw(self, screen):
         screen.blit(self.image, self.rect)
         titleT = self.font.render(self.title, True, self.titlecolor)
