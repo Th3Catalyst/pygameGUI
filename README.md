@@ -33,7 +33,8 @@ ARGS:
 
 ### Here is an example of this code:
 ```
-menu = pygameGUI.Menu("red", "Choose Game", "white", font, 500, 664, image="menuBG.png",pos=(screen.get_width()/2 - 210,screen.get_height()/2 - 332))
+font = pygame.font.Font('freesansbold.ttf', 70)
+menu = pygameGUI.Menu("Choose Game", "white", font, 500, 600, image="menuBG.png",pos=(100,60))
 
 chessB = pygameGUI.Text("Chess", font, (255, 255, 255))
 tetrisB = pygameGUI.Text("Tetris", font, (255, 255, 255))
@@ -43,4 +44,35 @@ menu.add(chessB)
 menu.add(tetrisB)
 menu.add(quitB)
 ```
-First, we create the menu object with 
+First, we create the menu object with the title "Choose Game" with white text and the free sans bold font. The menu has a width of 500 and a height of 600 placed at 100,60 and the menuBG as its background image:
+```
+font = pygame.font.Font('freesansbold.ttf', 70)
+menu = pygameGUI.Menu("Choose Game", "white", font, 500, 600, image="menuBG.png",pos=(100,60))
+```
+Then, we create three text objects, each with the free sans bold font and a white text color:
+```
+chessB = pygameGUI.Text("Chess", font, (255, 255, 255))
+tetrisB = pygameGUI.Text("Tetris", font, (255, 255, 255))
+quitB = pygameGUI.Text("Quit", font, (255, 255, 255))
+```
+Lastly, we add the text objects to the menu:
+```
+menu.add(chessB)
+menu.add(tetrisB)
+menu.add(quitB)
+```
+Now, we have to draw the menu. To do this, just call the draw function on the menu object in your game loop:
+```
+running = True
+while running:
+    for event in pg.event.get(): 
+        if event.type == pg.QUIT: 
+            running = False               
+
+    screen.fill((0, 0, 0))
+    menu.draw(screen) #draws the menu to the screen
+    pg.display.flip()
+
+pg.quit() #quits pygame after closing the run loop
+```
+**IMPORTANT:** Adding the menu to a group and drawing it that way will not draw the menu elements.
