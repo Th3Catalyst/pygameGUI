@@ -65,14 +65,14 @@ Now, we have to draw the menu. To do this, just call the draw function on the me
 ```
 running = True
 while running:
-    for event in pg.event.get(): 
-        if event.type == pg.QUIT: 
+    for event in pygame.event.get(): 
+        if event.type == pygame.QUIT: 
             running = False               
 
     screen.fill((0, 0, 0))
     menu.draw(screen) #draws the menu to the screen
-    pg.display.flip()
+    pygame.display.flip()
 
-pg.quit() #quits pygame after closing the run loop
+pygame.quit() #quits pygame after closing the run loop
 ```
 **IMPORTANT:** Adding the menu to a group and drawing it that way will not draw the menu elements.
