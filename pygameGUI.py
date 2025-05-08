@@ -60,7 +60,7 @@ class Background(pygame.sprite.Sprite): #class for the board squares
 
 
 class Text(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy):
+    def __init__(self, text, font, color, xy=(0,0)):
         super().__init__()
         self.font = font
         self.text = text
@@ -72,7 +72,7 @@ class Text(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 class Menu(Background):
-    def __init__(self, color, title, titlecolor, font, width, height, image = None, pos=(0,0),defaultC = ""):
+    def __init__(self, title, titlecolor, font, width, height, color="red", image = None, pos=(0,0),defaultC = ""):
         super().__init__(color, width, height, image, defaultC)
         self.title = title
         self.font = font
@@ -98,7 +98,7 @@ class Menu(Background):
 if debug:
     test_button = Text("Test", font, (255, 255, 255), (640, 450))
 
-    bg = Menu("red", "You Lose!", "white", font, 600, 600)
+    bg = Menu("You Lose!", "white", font, 600, 600,"red")
     bg.rect.x = 300
     bg.rect.y = 200
     all_sprites.add(bg)
