@@ -19,7 +19,7 @@ if event.type == pygame.MOUSEBUTTONUP:
     <CODE TO RUN ON BUTTON PRESS>
 ```
 
-### pygameGUI.Menu(color, title, titlecolor, font, width, height, image = None, pos = (0,0)):
+### pygameGUI.Menu(color, title, titlecolor, font, width, height, image = None, pos = (0,0),hrcolor="black"):
 creates a menu object  
 ARGS:  
 - color (3 tuple, string, hex code): the background color (overriden by image)
@@ -30,6 +30,7 @@ ARGS:
 - height (num): menu height
 - image (image link): background image
 - pos (2 tuple): top left corner of the menu
+- hrcolor (3 tuple, string, hex code): the color of the horizontal rule under the title
 
 ### Here is an example of this code:
 ```
@@ -73,6 +74,6 @@ while running:
     menu.draw(screen) #draws the menu to the screen
     pg.display.flip()
 
-pg.quit() #quits pygame after closing the run loop
+pg.quit()
 ```
 **IMPORTANT:** Adding the menu to a group and drawing it that way will not draw the menu elements.
