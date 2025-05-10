@@ -12,7 +12,7 @@ ARGS:
 - (x,y): position of the center of the text  
 
 ### pygameGUI.Button(text,font,color, (x,y), command=None)
-creates a button object that can be added to a menu. In order to use the on click you must add the button to a [Manager](#pygameGUI.Manager(name=None)).
+creates a button object that can be added to a menu. In order to use the on click you must add the button to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanagernamenone).
 ARGS:
 - text (string): the text displayed
 - font (pygame.font.Font object): text font
