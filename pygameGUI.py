@@ -57,21 +57,29 @@ class Background(pygame.sprite.Sprite): #class for the board squares
 
 
 class Manager(pygame.sprite.Group):
-    def __init__(self):
+    def __init__(self,name=None):
         super().__init__()
+        self.name = name
     
     def click(self):
         pos = pygame.mouse.get_pos()
         clickedSprites = [s for s in self.sprites() if s.rect.collidepoint(pos)]
+        print(clickedSprites)
+        print("===")
         for s in self.sprites():
             if isinstance(s,Button) and s in clickedSprites:
                 try:
                     func = s.command
-                    func()
-                except:
-                    pass
+                    if not s.isdropdown:
+                        func()
+                    else:
+                        func(s.text)
+                except Exception as e:
+                    print(e)
             if isinstance(s,Dropdown) and s in clickedSprites:
                 s.selected = not s.selected
+                print(s.selected)
+            
 
 
 class Text(pygame.sprite.Sprite):
@@ -88,12 +96,13 @@ class Text(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy=(0,0),command=None):
+    def __init__(self, text, font, color, xy=(0,0),command=None, isdropdown=False):
         super().__init__()
         self.font = font
         self.text = text
         self.color = color
         self.command = command
+        self.isdropdown = isdropdown
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = xy[0], xy[1]
@@ -102,31 +111,53 @@ class Button(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 class Dropdown(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy=(0,0),values=[],small=1):
+    def __init__(self, text, font, color,bgcolor="white", xy=(0,0),values=[],small=1):
         super().__init__()
         self.font = font
         self.text = text
         self.color = color
         self.small = small
         self.selected = False
+        self.bgcolor = bgcolor
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = xy[0], xy[1]
         self.entries = []
         i=0
+        self.maxwidth = self.rect.width
         for t in values:
-            text= Text(t, font, (255, 255, 255), (xy[0] +20,xy[1]+80))
+            text= Button(t, font, (255, 255, 255), (xy[0] +20,xy[1]+self.rect.height+5), command=self.selectItem,isdropdown=True)
+            #text.command = lambda: print(text.text)
+            
             text.rect.y += i*(text.rect.height*small+10)
             text.image = pygame.transform.scale(text.image, (int(text.rect.width*small), int(text.rect.height*small)))
+            text.rect = text.image.get_rect()
+            self.maxwidth = text.rect.width if text.rect.width > self.maxwidth else self.maxwidth
             self.entries.append(text)
             i+=1
 
+    def selectItem(self,item):
+        print(item)
+        self.text = item
+        self.image = self.font.render(self.text, True, self.color)
+
+        print(item)
     def draw(self, surface):
         surface.blit(self.image, self.rect)
         if self.selected:
+            i=0
+            pygame.draw.rect(surface,self.bgcolor,(int(self.rect.x),int(self.rect.y+self.rect.height+5),self.maxwidth,int(20+(self.rect.height+10)*self.small*(len(self.entries)))))
             for t in self.entries:
+                t.rect.x = self.rect.x +20
+                t.rect.y = self.rect.y+80 + i*(t.rect.height*self.small+10)
                 surface.blit(t.image, t.rect)
-
+                i+=1
+            for group in self.groups():
+                if isinstance(group,Manager):
+                    #print(group)
+                    
+                    for e in self.entries:
+                        group.add(e)
 
 class Menu(Background):
     def __init__(self, title, titlecolor, font, width, height, color="red", image = None, pos=(0,0),hrcolor="black",defaultC = ""):
@@ -135,7 +166,7 @@ class Menu(Background):
         self.font = font
         self.width = width
         self.height = height
-        self.sprites = pygame.sprite.Group()
+        self.sprites = Manager(title)
         self.titlecolor = titlecolor
         self.rect.x = pos[0]
         self.rect.y = pos[1]
@@ -146,8 +177,10 @@ class Menu(Background):
         titleTRect = titleT.get_rect(center=(self.rect.x + self.width/2, self.rect.y + 50))
         screen.blit(titleT, (self.rect.x +self.width/2 - titleTRect.width/2, self.rect.y + 50 - titleTRect.height/2.5))
         pygame.draw.line(screen, self.hrcolor, (self.rect.x + 20, self.rect.y + 60 + titleTRect.height / 2), (self.rect.x + self.width - 20, self.rect.y + 60 + titleTRect.height / 2), width=5)
-        self.sprites.draw(screen)
-                
+        #self.sprites.draw(screen)
+        for s in self.sprites:
+            if not isinstance(s,Button) or (isinstance(s,Button) and not s.isdropdown):
+                s.draw(screen)   
 
     
     def add(self, sprite):
@@ -162,9 +195,12 @@ class Menu(Background):
             if isinstance(s,Button) and s in clickedSprites:
                 try:
                     func = s.command
-                    func()
-                except:
-                    pass
+                    if not s.isdropdown:
+                        func()
+                    else:
+                        func(s.text)
+                except Exception as e:
+                    print(e)
             if isinstance(s,Dropdown) and s in clickedSprites:
                 s.selected = not s.selected
                 print(s.selected)
@@ -172,8 +208,8 @@ class Menu(Background):
 if debug:
     test_button = Button("Test", font, (255, 255, 255), (640, 450), lambda: print("test"))
 
-    man = Manager()
-    man.add(test_button)
+    man = Manager("man")
+    #man.add(test_button)
 
     bg = Menu("You Lose!", "white", font, 600, 600,"red")
     bg.rect.x = 300
@@ -182,7 +218,7 @@ if debug:
 
     bg.add(test_button)
     bg.add(Text("Test", font, (255, 255, 255), (640, 450)))
-    d = Dropdown("dropdown", font, "white", (300,300),["test","test2"], small=0.5)
+    d = Dropdown("dropdown", font, "white", "black", (300,300),["test","test2","test3","test4"], small=0.5)
     man.add(d)
     while running:
         for event in pygame.event.get():
@@ -190,7 +226,8 @@ if debug:
                 running = False
 
             if event.type == pygame.MOUSEBUTTONUP:
-                man.click()  
+                bg.click() 
+                man.click() 
         
         screen.fill((0, 0, 0))
         d.draw(screen)
