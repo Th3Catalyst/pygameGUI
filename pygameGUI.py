@@ -1,7 +1,7 @@
 import pygame
 
 # window setup
-debug = True
+debug = False
 if debug:
     pygame.init()
     screen = pygame.display.set_mode((1280, 900))
@@ -104,7 +104,6 @@ class Menu(Background):
                     print(e)
             if isinstance(s,Dropdown) and s in clickedSprites:
                 s.selected = not s.selected
-                print(s.selected)
             
             if isinstance(s,TextInput) and s in clickedSprites:
                 self.selectedInput = s
@@ -117,7 +116,6 @@ class Menu(Background):
                 self.selectedInput = None
             self.click()
         if event.type == pygame.KEYDOWN and self.selectedInput:
-            print(event.key)
             if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
                 self.selectedInput.selected = False
                 self.selectedInput = None
@@ -127,10 +125,8 @@ class Menu(Background):
                         self.selectedInput.text = self.selectedInput.text[0:-1]
                         char = None
                     elif not self.caps and not pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        print(chr(event.key))
                         char = chr(event.key)
                     else: 
-                        print(chr(event.key).upper())
                         char = chr(event.key).upper()
                     self.selectedInput.text += char if char else ""
                     self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
@@ -152,8 +148,6 @@ class Manager(pygame.sprite.Group):
     def click(self):
         pos = pygame.mouse.get_pos()
         clickedSprites = [s for s in self.sprites() if s.rect.collidepoint(pos)]
-        print(clickedSprites)
-        print("===")
         for s in self.sprites():
             if isinstance(s,Button) and s in clickedSprites:
                 try:
@@ -166,7 +160,6 @@ class Manager(pygame.sprite.Group):
                     print(e)
             if isinstance(s,Dropdown) and s in clickedSprites:
                 s.selected = not s.selected
-                print(s.selected)
             if isinstance(s,TextInput) and s in clickedSprites:
                 self.selectedInput = s
                 s.selected = True
@@ -178,7 +171,6 @@ class Manager(pygame.sprite.Group):
                 self.selectedInput = None
             self.click()
         if event.type == pygame.KEYDOWN and self.selectedInput:
-            print(event.key)
             if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
                 self.selectedInput.selected = False
                 self.selectedInput = None
@@ -188,10 +180,8 @@ class Manager(pygame.sprite.Group):
                         self.selectedInput.text = self.selectedInput.text[0:-1]
                         char = None
                     elif not self.caps and not pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        print(chr(event.key))
                         char = chr(event.key)
                     else: 
-                        print(chr(event.key).upper())
                         char = chr(event.key).upper()
                     self.selectedInput.text += char if char else ""
                     self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
@@ -249,7 +239,6 @@ class Dropdown(pygame.sprite.Sprite):
         self.maxwidth = self.rect.width
         for t in values:
             text= Button(t, font, (255, 255, 255), (pos[0] +20,pos[1]+self.rect.height+5), command=self.selectItem,isdropdown=True)
-            #text.command = lambda: print(text.text)
             
             text.rect.y += i*(text.rect.height*scaleFactor+10)
             text.image = pygame.transform.scale(text.image, (int(text.rect.width*scaleFactor), int(text.rect.height*scaleFactor)))
@@ -259,7 +248,6 @@ class Dropdown(pygame.sprite.Sprite):
             i+=1
 
     def selectItem(self,item):
-        print(item)
         self.text = item
         self.image = self.font.render(self.text, True, self.color)
 
@@ -275,7 +263,6 @@ class Dropdown(pygame.sprite.Sprite):
                 i+=1
             for group in self.groups():
                 if isinstance(group,Manager):
-                    #print(group)
                     
                     for e in self.entries:
                         group.add(e)
