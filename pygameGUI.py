@@ -60,6 +60,8 @@ class Manager(pygame.sprite.Group):
     def __init__(self,name=None):
         super().__init__()
         self.name = name
+        self.selectedInput = None
+        self.caps = False
     
     def click(self):
         pos = pygame.mouse.get_pos()
@@ -79,6 +81,43 @@ class Manager(pygame.sprite.Group):
             if isinstance(s,Dropdown) and s in clickedSprites:
                 s.selected = not s.selected
                 print(s.selected)
+            if isinstance(s,TextInput) and s in clickedSprites:
+                self.selectedInput = s
+                s.selected = True
+    
+    def input(self,event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if self.selectedInput:
+                self.selectedInput.selected = False
+                self.selectedInput = None
+            self.click()
+        if event.type == pygame.KEYDOWN and self.selectedInput:
+            print(event.key)
+            if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+                self.selectedInput.selected = False
+                self.selectedInput = None
+            else:
+                try:
+                    if event.key == pygame.K_BACKSPACE:
+                        self.selectedInput.text = self.selectedInput.text[0:-1]
+                        char = None
+                    elif not self.caps and not pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        print(chr(event.key))
+                        char = chr(event.key)
+                    else: 
+                        print(chr(event.key).upper())
+                        char = chr(event.key).upper()
+                    self.selectedInput.text += char if char else ""
+                    self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
+                    temprect = self.selectedInput.image.get_rect()
+                    self.selectedInput.rect.width = temprect.width
+                    self.selectedInput.rect.height = temprect.height
+
+                except:
+                    if event.key == pygame.K_CAPSLOCK:
+                        self.caps = not self.caps
+
+
             
 
 
@@ -159,6 +198,31 @@ class Dropdown(pygame.sprite.Sprite):
                     for e in self.entries:
                         group.add(e)
 
+class TextInput(pygame.sprite.Sprite):
+    def __init__(self, text, font, color, xy=(0,0)):
+        super().__init__()
+        self.font = font
+        self.text = text
+        self.color = color
+        self.selected = False
+        self.image = self.font.render(self.text, True, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = xy[0], xy[1]
+
+    def draw(self, surface):
+        if self.selected:
+            width = 5
+        else:
+            width = 1
+        pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10),(int(self.rect.x-10),int(self.rect.y-10) + self.rect.height +10), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10) + self.rect.height +10),(int(self.rect.x-10),int(self.rect.y-10)), width=width)
+
+
+        surface.blit(self.image, self.rect)
+
+
 class Menu(Background):
     def __init__(self, title, titlecolor, font, width, height, color="red", image = None, pos=(0,0),hrcolor="black",defaultC = ""):
         super().__init__(color, width, height, image, defaultC)
@@ -171,6 +235,9 @@ class Menu(Background):
         self.rect.x = pos[0]
         self.rect.y = pos[1]
         self.hrcolor = hrcolor
+        
+        self.selectedInput = None
+        self.caps = False
     def draw(self, screen):
         screen.blit(self.image, self.rect)
         titleT = self.font.render(self.title, True, self.titlecolor)
@@ -180,7 +247,8 @@ class Menu(Background):
         #self.sprites.draw(screen)
         for s in self.sprites:
             if not isinstance(s,Button) or (isinstance(s,Button) and not s.isdropdown):
-                s.draw(screen)   
+                s.draw(screen)  
+     
 
     
     def add(self, sprite):
@@ -204,6 +272,42 @@ class Menu(Background):
             if isinstance(s,Dropdown) and s in clickedSprites:
                 s.selected = not s.selected
                 print(s.selected)
+            
+            if isinstance(s,TextInput) and s in clickedSprites:
+                self.selectedInput = s
+                s.selected = True
+    
+    def input(self,event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if self.selectedInput:
+                self.selectedInput.selected = False
+                self.selectedInput = None
+            self.click()
+        if event.type == pygame.KEYDOWN and self.selectedInput:
+            print(event.key)
+            if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+                self.selectedInput.selected = False
+                self.selectedInput = None
+            else:
+                try:
+                    if event.key == pygame.K_BACKSPACE:
+                        self.selectedInput.text = self.selectedInput.text[0:-1]
+                        char = None
+                    elif not self.caps and not pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        print(chr(event.key))
+                        char = chr(event.key)
+                    else: 
+                        print(chr(event.key).upper())
+                        char = chr(event.key).upper()
+                    self.selectedInput.text += char if char else ""
+                    self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
+                    temprect = self.selectedInput.image.get_rect()
+                    self.selectedInput.rect.width = temprect.width
+                    self.selectedInput.rect.height = temprect.height
+
+                except:
+                    if event.key == pygame.K_CAPSLOCK:
+                        self.caps = not self.caps
 
 if debug:
     test_button = Button("Test", font, (255, 255, 255), (640, 450), lambda: print("test"))
@@ -219,19 +323,23 @@ if debug:
     bg.add(test_button)
     bg.add(Text("Test", font, (255, 255, 255), (640, 450)))
     d = Dropdown("dropdown", font, "white", "black", (300,300),["test","test2","test3","test4"], small=0.5)
+    ti = TextInput("Test", font, (255, 255, 255), (640, 450))
+    bg.add(ti)
     man.add(d)
     while running:
         for event in pygame.event.get():
+            bg.input(event)
             if event.type == pygame.QUIT:
                 running = False
 
             if event.type == pygame.MOUSEBUTTONUP:
-                bg.click() 
-                man.click() 
-        
+                #bg.click() 
+                #man.click() 
+                pass
         screen.fill((0, 0, 0))
         d.draw(screen)
-        #bg.draw(screen)
+        #ti.draw(screen)
+        bg.draw(screen)
         #test_button.draw(screen)
         pygame.display.flip()
 
