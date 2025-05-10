@@ -10,14 +10,15 @@ ARGS:
 - font (pygame.font.Font object): text font
 - color (3 tuple, string, hex code): text color
 - (x,y): position of the center of the text  
-**In order to make a button, use the following code in the events poll:**
-```
-if event.type == pygame.MOUSEBUTTONUP:     
-  pos = pygame.mouse.get_pos()     
-  clickedSprites = [s for s in self.all_sprites if s.rect.collidepoint(pos)]    
-  if <YOUR BUTTON> in clickedSprites:     
-    <CODE TO RUN ON BUTTON PRESS>
-```
+
+### pygameGUI.Button(text,font,color, (x,y), command=None)
+creates a button object that can be added to a menu. In order to use the on click you must add the button to a [Manager](#pygameGUI.Manager(name=None)).
+ARGS:
+- text (string): the text displayed
+- font (pygame.font.Font object): text font
+- color (3 tuple, string, hex code): text color
+- (x,y): position of the center of the text 
+- command (function): code to run on click 
 
 ### pygameGUI.Menu(color, title, titlecolor, font, width, height, image = None, pos = (0,0),hrcolor="black"):
 creates a menu object  
@@ -77,3 +78,7 @@ while running:
 pygame.quit()
 ```
 **IMPORTANT:** Adding the menu to a group and drawing it that way will not draw the menu elements.
+
+### pygameGUI.Manager(name=None)
+
+Used to handle inputs from elements in pygameGUI.
