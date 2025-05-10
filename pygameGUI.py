@@ -1,7 +1,7 @@
 import pygame
 
 # window setup
-debug = False
+debug = True
 if debug:
     pygame.init()
     screen = pygame.display.set_mode((1280, 900))
@@ -205,20 +205,20 @@ class Manager(pygame.sprite.Group):
 
 
 class Text(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy=(0,0)):
+    def __init__(self, text, font, color, pos=(0,0)):
         super().__init__()
         self.font = font
         self.text = text
         self.color = color
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = xy[0], xy[1]
+        self.rect.x, self.rect.y = pos[0], pos[1]
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy=(0,0),command=None, isdropdown=False):
+    def __init__(self, text, font, color, pos=(0,0),command=None, isdropdown=False):
         super().__init__()
         self.font = font
         self.text = text
@@ -227,32 +227,32 @@ class Button(pygame.sprite.Sprite):
         self.isdropdown = isdropdown
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = xy[0], xy[1]
+        self.rect.x, self.rect.y = pos[0], pos[1]
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
 class Dropdown(pygame.sprite.Sprite):
-    def __init__(self, text, font, color,bgcolor="white", xy=(0,0),values=[],small=1):
+    def __init__(self, text, font, color,bgcolor="white", pos=(0,0),values=[],scaleFactor=1):
         super().__init__()
         self.font = font
         self.text = text
         self.color = color
-        self.small = small
+        self.scaleFactor = scaleFactor
         self.selected = False
         self.bgcolor = bgcolor
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = xy[0], xy[1]
+        self.rect.x, self.rect.y = pos[0], pos[1]
         self.entries = []
         i=0
         self.maxwidth = self.rect.width
         for t in values:
-            text= Button(t, font, (255, 255, 255), (xy[0] +20,xy[1]+self.rect.height+5), command=self.selectItem,isdropdown=True)
+            text= Button(t, font, (255, 255, 255), (pos[0] +20,pos[1]+self.rect.height+5), command=self.selectItem,isdropdown=True)
             #text.command = lambda: print(text.text)
             
-            text.rect.y += i*(text.rect.height*small+10)
-            text.image = pygame.transform.scale(text.image, (int(text.rect.width*small), int(text.rect.height*small)))
+            text.rect.y += i*(text.rect.height*scaleFactor+10)
+            text.image = pygame.transform.scale(text.image, (int(text.rect.width*scaleFactor), int(text.rect.height*scaleFactor)))
             text.rect = text.image.get_rect()
             self.maxwidth = text.rect.width if text.rect.width > self.maxwidth else self.maxwidth
             self.entries.append(text)
@@ -267,10 +267,10 @@ class Dropdown(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
         if self.selected:
             i=0
-            pygame.draw.rect(surface,self.bgcolor,(int(self.rect.x),int(self.rect.y+self.rect.height+5),self.maxwidth,int(20+(self.rect.height+10)*self.small*(len(self.entries)))))
+            pygame.draw.rect(surface,self.bgcolor,(int(self.rect.x),int(self.rect.y+self.rect.height+5),self.maxwidth,int(20+(self.rect.height+10)*self.scaleFactor*(len(self.entries)))))
             for t in self.entries:
                 t.rect.x = self.rect.x +20
-                t.rect.y = self.rect.y+80 + i*(t.rect.height*self.small+10)
+                t.rect.y = self.rect.y+80 + i*(t.rect.height*self.scaleFactor+10)
                 surface.blit(t.image, t.rect)
                 i+=1
             for group in self.groups():
@@ -281,7 +281,7 @@ class Dropdown(pygame.sprite.Sprite):
                         group.add(e)
 
 class TextInput(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy=(0,0)):
+    def __init__(self, text, font, color, pos=(0,0)):
         super().__init__()
         self.font = font
         self.text = text
@@ -289,7 +289,7 @@ class TextInput(pygame.sprite.Sprite):
         self.selected = False
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = xy[0], xy[1]
+        self.rect.x, self.rect.y = pos[0], pos[1]
 
     def draw(self, surface):
         if self.selected:
@@ -320,10 +320,10 @@ if debug:
 
     man = Manager("man")
 
-    d = Dropdown("dropdown", font, "white", "black", (300,300),["test","test2","test3","test4"], small=0.5)
+    d = Dropdown("dropdown", font, "white", "black", (300,300),["test","test2","test3","test4"], scaleFactor=0.5)
     ti = TextInput("Test", font, (255, 255, 255), (640, 450))
     bg.add(ti)
-    man.add(d)
+    bg.add(d)
     while running:
         for event in pygame.event.get():
             bg.input(event)
