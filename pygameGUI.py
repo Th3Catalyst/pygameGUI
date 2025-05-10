@@ -11,13 +11,13 @@ if debug:
     font = pygame.font.Font('freesansbold.ttf', 70)
 
 
-class Background(pygame.sprite.Sprite): #class for the board squares
+class Background(pygame.sprite.Sprite): 
 
     def __init__(self,color,width,height,image = None, defaultC = ""): 
-        # Call the parent class (Sprite) constructor
+        
         super().__init__()
 
-        # fill the surface of the sprite with a color
+        
         self.image = pygame.Surface([width,height])
         self.image.fill(color)
 
@@ -49,178 +49,11 @@ class Background(pygame.sprite.Sprite): #class for the board squares
 
         self.image = pygame.transform.scale(self.image, (width,height))
         
-        #creates the bounding box of the sprite
+        
         self.rect = self.image.get_rect()
 
-    def draw(self, screen): #function that can draw the sprite so i can draw them individually
+    def draw(self, screen): 
         screen.blit(self.image, self.rect)
-
-
-class Manager(pygame.sprite.Group):
-    def __init__(self,name=None):
-        super().__init__()
-        self.name = name
-        self.selectedInput = None
-        self.caps = False
-    
-    def click(self):
-        pos = pygame.mouse.get_pos()
-        clickedSprites = [s for s in self.sprites() if s.rect.collidepoint(pos)]
-        print(clickedSprites)
-        print("===")
-        for s in self.sprites():
-            if isinstance(s,Button) and s in clickedSprites:
-                try:
-                    func = s.command
-                    if not s.isdropdown:
-                        func()
-                    else:
-                        func(s.text)
-                except Exception as e:
-                    print(e)
-            if isinstance(s,Dropdown) and s in clickedSprites:
-                s.selected = not s.selected
-                print(s.selected)
-            if isinstance(s,TextInput) and s in clickedSprites:
-                self.selectedInput = s
-                s.selected = True
-    
-    def input(self,event):
-        if event.type == pygame.MOUSEBUTTONUP:
-            if self.selectedInput:
-                self.selectedInput.selected = False
-                self.selectedInput = None
-            self.click()
-        if event.type == pygame.KEYDOWN and self.selectedInput:
-            print(event.key)
-            if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
-                self.selectedInput.selected = False
-                self.selectedInput = None
-            else:
-                try:
-                    if event.key == pygame.K_BACKSPACE:
-                        self.selectedInput.text = self.selectedInput.text[0:-1]
-                        char = None
-                    elif not self.caps and not pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        print(chr(event.key))
-                        char = chr(event.key)
-                    else: 
-                        print(chr(event.key).upper())
-                        char = chr(event.key).upper()
-                    self.selectedInput.text += char if char else ""
-                    self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
-                    temprect = self.selectedInput.image.get_rect()
-                    self.selectedInput.rect.width = temprect.width
-                    self.selectedInput.rect.height = temprect.height
-
-                except:
-                    if event.key == pygame.K_CAPSLOCK:
-                        self.caps = not self.caps
-
-
-            
-
-
-class Text(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy=(0,0)):
-        super().__init__()
-        self.font = font
-        self.text = text
-        self.color = color
-        self.image = self.font.render(self.text, True, self.color)
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = xy[0], xy[1]
-
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-
-class Button(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy=(0,0),command=None, isdropdown=False):
-        super().__init__()
-        self.font = font
-        self.text = text
-        self.color = color
-        self.command = command
-        self.isdropdown = isdropdown
-        self.image = self.font.render(self.text, True, self.color)
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = xy[0], xy[1]
-
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-
-class Dropdown(pygame.sprite.Sprite):
-    def __init__(self, text, font, color,bgcolor="white", xy=(0,0),values=[],small=1):
-        super().__init__()
-        self.font = font
-        self.text = text
-        self.color = color
-        self.small = small
-        self.selected = False
-        self.bgcolor = bgcolor
-        self.image = self.font.render(self.text, True, self.color)
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = xy[0], xy[1]
-        self.entries = []
-        i=0
-        self.maxwidth = self.rect.width
-        for t in values:
-            text= Button(t, font, (255, 255, 255), (xy[0] +20,xy[1]+self.rect.height+5), command=self.selectItem,isdropdown=True)
-            #text.command = lambda: print(text.text)
-            
-            text.rect.y += i*(text.rect.height*small+10)
-            text.image = pygame.transform.scale(text.image, (int(text.rect.width*small), int(text.rect.height*small)))
-            text.rect = text.image.get_rect()
-            self.maxwidth = text.rect.width if text.rect.width > self.maxwidth else self.maxwidth
-            self.entries.append(text)
-            i+=1
-
-    def selectItem(self,item):
-        print(item)
-        self.text = item
-        self.image = self.font.render(self.text, True, self.color)
-
-        print(item)
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-        if self.selected:
-            i=0
-            pygame.draw.rect(surface,self.bgcolor,(int(self.rect.x),int(self.rect.y+self.rect.height+5),self.maxwidth,int(20+(self.rect.height+10)*self.small*(len(self.entries)))))
-            for t in self.entries:
-                t.rect.x = self.rect.x +20
-                t.rect.y = self.rect.y+80 + i*(t.rect.height*self.small+10)
-                surface.blit(t.image, t.rect)
-                i+=1
-            for group in self.groups():
-                if isinstance(group,Manager):
-                    #print(group)
-                    
-                    for e in self.entries:
-                        group.add(e)
-
-class TextInput(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, xy=(0,0)):
-        super().__init__()
-        self.font = font
-        self.text = text
-        self.color = color
-        self.selected = False
-        self.image = self.font.render(self.text, True, self.color)
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = xy[0], xy[1]
-
-    def draw(self, surface):
-        if self.selected:
-            width = 5
-        else:
-            width = 1
-        pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)), width=width)
-        pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10), width=width)
-        pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10),(int(self.rect.x-10),int(self.rect.y-10) + self.rect.height +10), width=width)
-        pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10) + self.rect.height +10),(int(self.rect.x-10),int(self.rect.y-10)), width=width)
-
-
-        surface.blit(self.image, self.rect)
 
 
 class Menu(Background):
@@ -309,11 +142,173 @@ class Menu(Background):
                     if event.key == pygame.K_CAPSLOCK:
                         self.caps = not self.caps
 
+class Manager(pygame.sprite.Group):
+    def __init__(self,name=None):
+        super().__init__()
+        self.name = name
+        self.selectedInput = None
+        self.caps = False
+    
+    def click(self):
+        pos = pygame.mouse.get_pos()
+        clickedSprites = [s for s in self.sprites() if s.rect.collidepoint(pos)]
+        print(clickedSprites)
+        print("===")
+        for s in self.sprites():
+            if isinstance(s,Button) and s in clickedSprites:
+                try:
+                    func = s.command
+                    if not s.isdropdown:
+                        func()
+                    else:
+                        func(s.text)
+                except Exception as e:
+                    print(e)
+            if isinstance(s,Dropdown) and s in clickedSprites:
+                s.selected = not s.selected
+                print(s.selected)
+            if isinstance(s,TextInput) and s in clickedSprites:
+                self.selectedInput = s
+                s.selected = True
+    
+    def input(self,event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if self.selectedInput:
+                self.selectedInput.selected = False
+                self.selectedInput = None
+            self.click()
+        if event.type == pygame.KEYDOWN and self.selectedInput:
+            print(event.key)
+            if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+                self.selectedInput.selected = False
+                self.selectedInput = None
+            else:
+                try:
+                    if event.key == pygame.K_BACKSPACE:
+                        self.selectedInput.text = self.selectedInput.text[0:-1]
+                        char = None
+                    elif not self.caps and not pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        print(chr(event.key))
+                        char = chr(event.key)
+                    else: 
+                        print(chr(event.key).upper())
+                        char = chr(event.key).upper()
+                    self.selectedInput.text += char if char else ""
+                    self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
+                    temprect = self.selectedInput.image.get_rect()
+                    self.selectedInput.rect.width = temprect.width
+                    self.selectedInput.rect.height = temprect.height
+
+                except:
+                    if event.key == pygame.K_CAPSLOCK:
+                        self.caps = not self.caps
+
+
+class Text(pygame.sprite.Sprite):
+    def __init__(self, text, font, color, xy=(0,0)):
+        super().__init__()
+        self.font = font
+        self.text = text
+        self.color = color
+        self.image = self.font.render(self.text, True, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = xy[0], xy[1]
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class Button(pygame.sprite.Sprite):
+    def __init__(self, text, font, color, xy=(0,0),command=None, isdropdown=False):
+        super().__init__()
+        self.font = font
+        self.text = text
+        self.color = color
+        self.command = command
+        self.isdropdown = isdropdown
+        self.image = self.font.render(self.text, True, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = xy[0], xy[1]
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class Dropdown(pygame.sprite.Sprite):
+    def __init__(self, text, font, color,bgcolor="white", xy=(0,0),values=[],small=1):
+        super().__init__()
+        self.font = font
+        self.text = text
+        self.color = color
+        self.small = small
+        self.selected = False
+        self.bgcolor = bgcolor
+        self.image = self.font.render(self.text, True, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = xy[0], xy[1]
+        self.entries = []
+        i=0
+        self.maxwidth = self.rect.width
+        for t in values:
+            text= Button(t, font, (255, 255, 255), (xy[0] +20,xy[1]+self.rect.height+5), command=self.selectItem,isdropdown=True)
+            #text.command = lambda: print(text.text)
+            
+            text.rect.y += i*(text.rect.height*small+10)
+            text.image = pygame.transform.scale(text.image, (int(text.rect.width*small), int(text.rect.height*small)))
+            text.rect = text.image.get_rect()
+            self.maxwidth = text.rect.width if text.rect.width > self.maxwidth else self.maxwidth
+            self.entries.append(text)
+            i+=1
+
+    def selectItem(self,item):
+        print(item)
+        self.text = item
+        self.image = self.font.render(self.text, True, self.color)
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        if self.selected:
+            i=0
+            pygame.draw.rect(surface,self.bgcolor,(int(self.rect.x),int(self.rect.y+self.rect.height+5),self.maxwidth,int(20+(self.rect.height+10)*self.small*(len(self.entries)))))
+            for t in self.entries:
+                t.rect.x = self.rect.x +20
+                t.rect.y = self.rect.y+80 + i*(t.rect.height*self.small+10)
+                surface.blit(t.image, t.rect)
+                i+=1
+            for group in self.groups():
+                if isinstance(group,Manager):
+                    #print(group)
+                    
+                    for e in self.entries:
+                        group.add(e)
+
+class TextInput(pygame.sprite.Sprite):
+    def __init__(self, text, font, color, xy=(0,0)):
+        super().__init__()
+        self.font = font
+        self.text = text
+        self.color = color
+        self.selected = False
+        self.image = self.font.render(self.text, True, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = xy[0], xy[1]
+
+    def draw(self, surface):
+        if self.selected:
+            width = 5
+        else:
+            width = 1
+        pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10),(int(self.rect.x-10),int(self.rect.y-10) + self.rect.height +10), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10) + self.rect.height +10),(int(self.rect.x-10),int(self.rect.y-10)), width=width)
+
+
+        surface.blit(self.image, self.rect)
+
+
+
 if debug:
     test_button = Button("Test", font, (255, 255, 255), (640, 450), lambda: print("test"))
 
-    man = Manager("man")
-    #man.add(test_button)
 
     bg = Menu("You Lose!", "white", font, 600, 600,"red")
     bg.rect.x = 300
@@ -322,6 +317,9 @@ if debug:
 
     bg.add(test_button)
     bg.add(Text("Test", font, (255, 255, 255), (640, 450)))
+
+    man = Manager("man")
+
     d = Dropdown("dropdown", font, "white", "black", (300,300),["test","test2","test3","test4"], small=0.5)
     ti = TextInput("Test", font, (255, 255, 255), (640, 450))
     bg.add(ti)
@@ -338,7 +336,7 @@ if debug:
                 pass
         screen.fill((0, 0, 0))
         d.draw(screen)
-        #ti.draw(screen)
+        ti.draw(screen)
         bg.draw(screen)
         #test_button.draw(screen)
         pygame.display.flip()
