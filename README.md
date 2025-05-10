@@ -12,7 +12,7 @@ ARGS:
 - pos (2 tuple): top left corner of the text
 
 ### pygameGUI.Button(text,font,color, pos = (0,0), command=None)
-creates a button object that can be added to a menu. In order to use it properly you must add the button to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanagernamenone) or a menu.
+creates a button object that can be added to a menu. In order to use it properly you must add the button to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanager) or a menu.
 ARGS:
 - text (string): the text displayed
 - font (pygame.font.Font object): text font
@@ -160,7 +160,7 @@ while running:
 ```
 
 ### pygameGUI.Dropdown(text, font, color,bgcolor="white", pos=(0,0),values=[],scaleFactor=1):
-creates a dropdown that can be added to a menu. In order to use it properly you must add the dropdown to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanagernamenone) or a menu.
+creates a dropdown that can be added to a menu. In order to use it properly you must add the dropdown to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanager) or a menu.
 ARGS:
 - text (string): the placeholder text
 - font (pygame.font.Font object): text font
@@ -173,7 +173,7 @@ ARGS:
 Use the `.text` attribute to get the value of the dropdown.
 
 ### pygameGUI.TextInput(text, font, color, pos=(0,0)):
-creates a text input object that can be added to a menu. In order to use it properly you must add the dropdown to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanagernamenone) or a menu. 
+creates a text input object that can be added to a menu. In order to use it properly you must add the dropdown to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanager) or a menu. 
 ARGS:
 - text (string): the text displayed
 - font (pygame.font.Font object): text font
