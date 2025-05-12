@@ -1,8 +1,9 @@
 import pygame
 
-# window setup
+#set to false by default, true allows me to test features
 debug = False
 if debug:
+    #make a new screen
     pygame.init()
     screen = pygame.display.set_mode((1280, 900))
     running = True
@@ -13,36 +14,12 @@ if debug:
 
 class Background(pygame.sprite.Sprite): 
 
-    def __init__(self,color,width,height,image = None, defaultC = ""): 
+    def __init__(self,color,width,height,image = None): 
         
         super().__init__()
-
         
         self.image = pygame.Surface([width,height])
         self.image.fill(color)
-
-        self.color = color
-
-        self.pieceIndex = ""
-
-        match defaultC:
-                case "red":
-                    self.image = pygame.image.load("school/blocks/redTile.png").convert_alpha()
-                case "green":
-                    self.image = pygame.image.load("school/blocks/greenTile.png").convert_alpha()
-                case "orange":
-                    self.image = pygame.image.load("school/blocks/orangeTile.png").convert_alpha()
-                case "purple":
-                    self.image = pygame.image.load("school/blocks/purpleTile.png").convert_alpha()
-                case "blue":
-                    self.image = pygame.image.load("school/blocks/blueTile.png").convert_alpha()
-                case "teal":
-                    self.image = pygame.image.load("school/blocks/tealTile.png").convert_alpha()
-                case "yellow":
-                    self.image = pygame.image.load("school/blocks/yellowTile.png").convert_alpha()
-                case "grey":
-                    self.image = pygame.image.load("school/blocks/greyTile.png").convert_alpha()
-        
 
         if image != None:
             self.image = pygame.image.load(image).convert_alpha()
