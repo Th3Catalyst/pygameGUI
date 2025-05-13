@@ -12,52 +12,52 @@ if debug:
     font = pygame.font.Font('freesansbold.ttf', 70)
 
 
-class Background(pygame.sprite.Sprite): 
 
-    def __init__(self,color,width,height,image = None): 
+class Menu(pygame.sprite.Sprite): #base menu class
+    def __init__(self, title, titlecolor, font, width, height, color="red", image = None, pos=(0,0),hrcolor="black"):
+        super().__init__() #makes the menu a sprite
         
-        super().__init__()
-        
+        #makes a rectangle the size of the sprite and fills it with the specified color if the user requested it
         self.image = pygame.Surface([width,height])
         self.image.fill(color)
 
-        if image != None:
+        if image != None: #sets the menu background to an image if it was in the function
             self.image = pygame.image.load(image).convert_alpha()
 
-        self.image = pygame.transform.scale(self.image, (width,height))
+        self.image = pygame.transform.scale(self.image, (width,height)) #scales the image to the size of the sprite
         
         
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect() #makes a collision box fgor the menu
 
-    def draw(self, screen): 
-        screen.blit(self.image, self.rect)
-
-
-class Menu(Background):
-    def __init__(self, title, titlecolor, font, width, height, color="red", image = None, pos=(0,0),hrcolor="black",defaultC = ""):
-        super().__init__(color, width, height, image, defaultC)
-        self.title = title
-        self.font = font
-        self.width = width
-        self.height = height
-        self.sprites = Manager(title)
-        self.titlecolor = titlecolor
-        self.rect.x = pos[0]
-        self.rect.y = pos[1]
-        self.hrcolor = hrcolor
+        self.title = title #menu title
+        self.font = font #menu font
+        self.width = width #width of the menu
+        self.height = height #height of the menu
+        self.sprites = Manager() #group that all the objects of the menu are in
+        self.titlecolor = titlecolor #color of the menu ttitle
+        self.rect.x = pos[0] #x of the top left of the menu
+        self.rect.y = pos[1] #y of the top left of the menu
+        self.hrcolor = hrcolor #color of he line separtating the title from the menu elements
         
-        self.selectedInput = None
-        self.caps = False
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
-        titleT = self.font.render(self.title, True, self.titlecolor)
+        #text input variables
+        self.selectedInput = None #text input that is selected
+        self.caps = False #capslock variable
+
+    def draw(self, screen): #draw function
+        screen.blit(self.image, self.rect) #draws the menu background
+        #renders the title text
+        titleT = self.font.render(self.title, True, self.titlecolor) 
         titleTRect = titleT.get_rect(center=(self.rect.x + self.width/2, self.rect.y + 50))
         screen.blit(titleT, (self.rect.x +self.width/2 - titleTRect.width/2, self.rect.y + 50 - titleTRect.height/2.5))
+        #draws the separating line from the title to the menu elements
         pygame.draw.line(screen, self.hrcolor, (self.rect.x + 20, self.rect.y + 60 + titleTRect.height / 2), (self.rect.x + self.width - 20, self.rect.y + 60 + titleTRect.height / 2), width=5)
-        #self.sprites.draw(screen)
+        
         for s in self.sprites:
             if not isinstance(s,Button) or (isinstance(s,Button) and not s.isdropdown):
-                s.draw(screen)  
+                try:
+                    s.draw(screen) 
+                except Exception:
+                     screen.blit(s.image, s.rect)
      
 
     
