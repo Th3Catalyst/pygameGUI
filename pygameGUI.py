@@ -52,8 +52,10 @@ class Menu(pygame.sprite.Sprite): #base menu class
         #draws the separating line from the title to the menu elements
         pygame.draw.line(screen, self.hrcolor, (self.rect.x + 20, self.rect.y + 60 + titleTRect.height / 2), (self.rect.x + self.width - 20, self.rect.y + 60 + titleTRect.height / 2), width=5)
         
+        #draws all the menu elements to the screen
         for s in self.sprites:
-            if not isinstance(s,Button) or (isinstance(s,Button) and not s.isdropdown):
+            if not isinstance(s,Button) or (isinstance(s,Button) and not s.isdropdown): #makes sure i dont always draw the dropdown menu, as i couldnt close it otherwise
+                #checks if the element has a special draw function
                 try:
                     s.draw(screen) 
                 except Exception:
@@ -61,68 +63,75 @@ class Menu(pygame.sprite.Sprite): #base menu class
      
 
     
-    def add(self, sprite):
+    def add(self, sprite): #function to add an element to a menu
         self.sprites.add(sprite)
+        #puts the element below the previous one
         sprite.rect.x = self.rect.x + (self.width - sprite.rect.width) / 2
         sprite.rect.y = self.rect.y + 70*(len(self.sprites)+1) -30
     
-    def click(self):
+    def click(self): #function that handles menu element clicks for buttons
+        #mkaes a list of the sprites that were clicked
         pos = pygame.mouse.get_pos()
         clickedSprites = [s for s in self.sprites if s.rect.collidepoint(pos)]
+
         for s in self.sprites:
-            if isinstance(s,Button) and s in clickedSprites:
+            if isinstance(s,Button) and s in clickedSprites: #runs if the clicked sprite was a button
                 try:
+                    #runs the buttons specified function
                     func = s.command
                     if not s.isdropdown:
                         func()
                     else:
-                        func(s.text)
+                        func(s.text) #the dropdown buttons need their text as a function argument, so the code must be different
                 except Exception as e:
                     print(e)
-            if isinstance(s,Dropdown) and s in clickedSprites:
-                s.selected = not s.selected
+            if isinstance(s,Dropdown) and s in clickedSprites: #runs if a dropdown was clicked
+                s.selected = not s.selected #tells the dropdown its selected
             
-            if isinstance(s,TextInput) and s in clickedSprites:
-                self.selectedInput = s
-                s.selected = True
+            if isinstance(s,TextInput) and s in clickedSprites: #runs if the clicked sprite was a text input
+                self.selectedInput = s #sets the selected input to be the clicked one
+                s.selected = True #tells the text input its selected
     
-    def input(self,event):
-        if event.type == pygame.MOUSEBUTTONUP:
-            if self.selectedInput:
+    def input(self,event): #function that handles all inputs for the menu elements
+        if event.type == pygame.MOUSEBUTTONUP: #runs when the user clicks their mouse
+            if self.selectedInput: #deselects a text input if it is selected
                 self.selectedInput.selected = False
                 self.selectedInput = None
-            self.click()
-        if event.type == pygame.KEYDOWN and self.selectedInput:
-            if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+            self.click() #runs the click input
+        if event.type == pygame.KEYDOWN and self.selectedInput: #key presses for the text input
+            if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE: #deselects the text input if enter or escape is pressed
                 self.selectedInput.selected = False
                 self.selectedInput = None
             else:
                 try:
-                    if event.key == pygame.K_BACKSPACE:
+                    if event.key == pygame.K_BACKSPACE: #deletes a character from the text input string 
                         self.selectedInput.text = self.selectedInput.text[0:-1]
                         char = None
                     elif not self.caps and not pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        char = chr(event.key)
+                        char = chr(event.key) #stores a lowercase letter
                     else: 
-                        char = chr(event.key).upper()
-                    self.selectedInput.text += char if char else ""
+                        char = chr(event.key).upper() #stores an uppercase letter
+                    self.selectedInput.text += char if char else "" #adds the character to the text input string
+                    #rerenders the textinput with the new string
                     self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
                     temprect = self.selectedInput.image.get_rect()
                     self.selectedInput.rect.width = temprect.width
                     self.selectedInput.rect.height = temprect.height
 
                 except:
-                    if event.key == pygame.K_CAPSLOCK:
+                    if event.key == pygame.K_CAPSLOCK: #capslock functionality
                         self.caps = not self.caps
 
-class Manager(pygame.sprite.Group):
+class Manager(pygame.sprite.Group): #input manager class
     def __init__(self,name=None):
+
         super().__init__()
         self.name = name
+        #functionality for text inputs
         self.selectedInput = None
         self.caps = False
     
-    def click(self):
+    def click(self): #click function (same as from menu)
         pos = pygame.mouse.get_pos()
         clickedSprites = [s for s in self.sprites() if s.rect.collidepoint(pos)]
         for s in self.sprites():
@@ -141,7 +150,7 @@ class Manager(pygame.sprite.Group):
                 self.selectedInput = s
                 s.selected = True
     
-    def input(self,event):
+    def input(self,event): #input function (same as from menu)
         if event.type == pygame.MOUSEBUTTONUP:
             if self.selectedInput:
                 self.selectedInput.selected = False
@@ -171,46 +180,50 @@ class Manager(pygame.sprite.Group):
                         self.caps = not self.caps
 
 
-class Text(pygame.sprite.Sprite):
+class Text(pygame.sprite.Sprite): #text object class
     def __init__(self, text, font, color, pos=(0,0)):
-        super().__init__()
-        self.font = font
-        self.text = text
-        self.color = color
+        super().__init__() #mkaes it a sprite
+        self.font = font #text font
+        self.text = text #the text string
+        self.color = color #text color
+        #renders the text
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos[0], pos[1]
 
-    def draw(self, surface):
+    def draw(self, surface): #draw function
         surface.blit(self.image, self.rect)
 
-class Button(pygame.sprite.Sprite):
-    def __init__(self, text, font, color, pos=(0,0),command=None, isdropdown=False):
-        super().__init__()
-        self.font = font
-        self.text = text
-        self.color = color
-        self.command = command
-        self.isdropdown = isdropdown
+class Button(pygame.sprite.Sprite): #button object class
+    def __init__(self, text, font, color, pos=(0,0),command=None, isdropdown=False): #isdropdown is not used by users
+        super().__init__() #makes it a sprite
+        self.font = font # text font
+        self.text = text #text string
+        self.color = color #text color
+        self.command = command #button function
+        self.isdropdown = isdropdown #if the button is a dropdown element
+        #renders the button
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos[0], pos[1]
 
-    def draw(self, surface):
+    def draw(self, surface): #draw function
         surface.blit(self.image, self.rect)
 
-class Dropdown(pygame.sprite.Sprite):
+class Dropdown(pygame.sprite.Sprite): #dropdown class
     def __init__(self, text, font, color,bgcolor="white", pos=(0,0),values=[],scaleFactor=1):
-        super().__init__()
-        self.font = font
-        self.text = text
-        self.color = color
-        self.scaleFactor = scaleFactor
+        super().__init__() #makes it a sprite
+        self.font = font #font for dropdown object and th emenu objects
+        self.text = text #placeholder text string
+        self.color = color #text color
+        self.scaleFactor = scaleFactor #how much smaller the menu elements are from the dropdown menu title
         self.selected = False
-        self.bgcolor = bgcolor
+        self.bgcolor = bgcolor #dropdown menu bg color
+        #renders the dropdown
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos[0], pos[1]
+        #mkaes the entries in the dropdown menu
         self.entries = []
         i=0
         self.maxwidth = self.rect.width
