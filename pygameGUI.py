@@ -2,7 +2,7 @@ import pygame
 
 #set to false by default, true allows me to test features
 debug = False
-if debug:
+if debug and __name__=="__main__":
     #make a new screen
     pygame.init()
     screen = pygame.display.set_mode((1280, 900))
@@ -225,99 +225,109 @@ class Dropdown(pygame.sprite.Sprite): #dropdown class
         self.rect.x, self.rect.y = pos[0], pos[1]
         #mkaes the entries in the dropdown menu
         self.entries = []
-        i=0
-        self.maxwidth = self.rect.width
+        
+        self.maxwidth = self.rect.width #this will store the width the rectangle behind the menu entries needs to be
         for t in values:
-            text= Button(t, font, (255, 255, 255), (pos[0] +20,pos[1]+self.rect.height+5), command=self.selectItem,isdropdown=True)
+            #renders a menu entry
+            text= Button(t, font, (255, 255, 255), command=self.selectItem,isdropdown=True)
             
-            text.rect.y += i*(text.rect.height*scaleFactor+10)
             text.image = pygame.transform.scale(text.image, (int(text.rect.width*scaleFactor), int(text.rect.height*scaleFactor)))
             text.rect = text.image.get_rect()
-            self.maxwidth = text.rect.width if text.rect.width > self.maxwidth else self.maxwidth
-            self.entries.append(text)
-            i+=1
+            self.maxwidth = text.rect.width if text.rect.width > self.maxwidth else self.maxwidth #makes the maxwidth larger if a text element is longer than the rectangle
+            self.entries.append(text) #adds the button to a llist of all the dropdown menu sprites
+            
 
-    def selectItem(self,item):
+    def selectItem(self,item): #function for the dropdown buttons that updates the dropdown title/placeholder text
         self.text = item
         self.image = self.font.render(self.text, True, self.color)
 
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-        if self.selected:
+    def draw(self, surface): #draw function for the dropdown
+        surface.blit(self.image, self.rect)#draws the placeholder/title text
+        if self.selected: #draws this part if the dropdown is selected
             i=0
             pygame.draw.rect(surface,self.bgcolor,(int(self.rect.x),int(self.rect.y+self.rect.height+5),self.maxwidth,int(20+(self.rect.height+10)*self.scaleFactor*(len(self.entries)))))
             for t in self.entries:
+                #positions the menu entries
                 t.rect.x = self.rect.x +20
                 t.rect.y = self.rect.y+80 + i*(t.rect.height*self.scaleFactor+10)
-                surface.blit(t.image, t.rect)
+                surface.blit(t.image, t.rect) #draws the menu entry to the screen
                 i+=1
-            for group in self.groups():
+            for group in self.groups(): #adds the menu entries to any input managers the dropdown is part of
                 if isinstance(group,Manager):
                     
                     for e in self.entries:
                         group.add(e)
 
-class TextInput(pygame.sprite.Sprite):
+class TextInput(pygame.sprite.Sprite): #text input class
     def __init__(self, text, font, color, pos=(0,0)):
-        super().__init__()
-        self.font = font
-        self.text = text
-        self.color = color
+        super().__init__() #makes it a sprite
+        self.font = font #font color
+        self.text = text #placeholder string
+        self.color = color #text color
         self.selected = False
+        #renders the text input
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos[0], pos[1]
 
-    def draw(self, surface):
-        if self.selected:
+    def draw(self, surface): #draw function
+        if self.selected: #makes the border thicker if its selected
             width = 5
         else:
             width = 1
+        #draws the border rectangle around the text input
         pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)), width=width)
         pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10), width=width)
         pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10),(int(self.rect.x-10),int(self.rect.y-10) + self.rect.height +10), width=width)
         pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10) + self.rect.height +10),(int(self.rect.x-10),int(self.rect.y-10)), width=width)
 
 
-        surface.blit(self.image, self.rect)
+        surface.blit(self.image, self.rect) #draws the text input text
 
 
 
-if debug:
-    test_button = Button("Test", font, (255, 255, 255), (640, 450), lambda: print("test"))
+if debug and __name__ == "__main__": #runs if im debugging
+    test_button = Button("Test", font, (255, 255, 255), (640, 450), lambda: print("test")) #test button
 
-
+    #test menu
     bg = Menu("You Lose!", "white", font, 600, 600,"red")
     bg.rect.x = 300
     bg.rect.y = 200
     all_sprites.add(bg)
 
+    #adds the test button and a test text object to the menu
     bg.add(test_button)
     bg.add(Text("Test", font, (255, 255, 255), (640, 450)))
 
-    man = Manager("man")
+    man = Manager() #makes a test input manager 
 
-    d = Dropdown("dropdown", font, "white", "black", (300,300),["test","test2","test3","test4"], scaleFactor=0.5)
-    ti = TextInput("Test", font, (255, 255, 255), (640, 450))
+    d = Dropdown("dropdown", font, "white", "black", (300,300),["test","test2","test3","test4"], scaleFactor=0.5) #makes a test dropdown
+    ti = TextInput("Test", font, (255, 255, 255), (640, 450)) #test text inoput
+    #adds the text input and dropdown to the menu
     bg.add(ti)
     bg.add(d)
-    while running:
-        for event in pygame.event.get():
-            bg.input(event)
-            if event.type == pygame.QUIT:
+    while running: #game loop
+        for event in pygame.event.get(): #polls for events
+            bg.input(event) #runs the input function for the menu
+            #man.input(event) #runs the input function for the manager
+            if event.type == pygame.QUIT: #runs when the user presses the "x"
                 running = False
 
-            if event.type == pygame.MOUSEBUTTONUP:
+            if event.type == pygame.MOUSEBUTTONUP: #runs when th euser clicks
+                #testing click functions for menu and manager
                 #bg.click() 
                 #man.click() 
                 pass
-        screen.fill((0, 0, 0))
-        d.draw(screen)
-        ti.draw(screen)
+        
+
+        screen.fill((0, 0, 0)) #makes the screen black
+        #draws the menu to the screen
+        #d.draw(screen)
+        #ti.draw(screen)
         bg.draw(screen)
         #test_button.draw(screen)
-        pygame.display.flip()
+        pygame.display.flip() #updates the display
 
 
 
-    pygame.quit()
+    pygame.quit() #quits pygame
