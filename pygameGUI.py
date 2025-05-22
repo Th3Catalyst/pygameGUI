@@ -1,7 +1,7 @@
 import pygame
 
 #set to false by default, true allows me to test features
-debug = False
+debug = True
 if debug and __name__=="__main__":
     #make a new screen
     pygame.init()
@@ -14,7 +14,7 @@ if debug and __name__=="__main__":
 
 
 class Menu(pygame.sprite.Sprite): #base menu class
-    def __init__(self, title, titlecolor, font, width, height, color="red", image = None, pos=(0,0),hrcolor="black"):
+    def __init__(self, title, titlecolor, font, width, height, color="red", image = None, pos=(0,0),hrcolor="black", anchor="nw"):
         super().__init__() #makes the menu a sprite
         
         #makes a rectangle the size of the sprite and fills it with the specified color if the user requested it
@@ -35,13 +35,34 @@ class Menu(pygame.sprite.Sprite): #base menu class
         self.height = height #height of the menu
         self.sprites = Manager() #group that all the objects of the menu are in
         self.titlecolor = titlecolor #color of the menu ttitle
-        self.rect.x = pos[0] #x of the top left of the menu
-        self.rect.y = pos[1] #y of the top left of the menu
+        match anchor.lower():
+            case "nw":
+                self.anchor = (0,0)
+            case "ne":
+                self.anchor = (-self.rect.width,0)
+            case "n":
+                self.anchor = (-self.rect.width/2,0)
+            case "w":
+                self.anchor = (-self.rect.width/2,0)
+            case "center":
+                self.anchor = (-self.rect.width/2,-self.rect.height/2)
+            case "e":
+                self.anchor = (-self.rect.width,-self.rect.height/2)
+            case "sw":
+                self.anchor = (0,-self.rect.height)
+            case "s":
+                self.anchor = (-self.rect.width/2,-self.rect.height)
+            case "se":
+                self.anchor = (-self.rect.width,-self.rect.height)
+        
+        self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1]
         self.hrcolor = hrcolor #color of he line separtating the title from the menu elements
         
         #text input variables
         self.selectedInput = None #text input that is selected
         self.caps = False #capslock variable
+
+        self.listAmt = 0
 
     def draw(self, screen): #draw function
         screen.blit(self.image, self.rect) #draws the menu background
@@ -66,8 +87,13 @@ class Menu(pygame.sprite.Sprite): #base menu class
     def add(self, sprite): #function to add an element to a menu
         self.sprites.add(sprite)
         #puts the element below the previous one
-        sprite.rect.x = self.rect.x + (self.width - sprite.rect.width) / 2
-        sprite.rect.y = self.rect.y + 70*(len(self.sprites)+1) -30
+        if not sprite.pos:
+            self.listAmt +=1
+            sprite.rect.x = self.rect.x + (self.width - sprite.rect.width) / 2
+            sprite.rect.y = self.rect.y + 70*(self.listAmt+1) - 30
+        else:
+            sprite.rect.x = self.rect.x + sprite.pos[0] + sprite.anchor[0]
+            sprite.rect.y = self.rect.y + sprite.pos[1] + sprite.anchor[1]
     
     def click(self): #function that handles menu element clicks for buttons
         #mkaes a list of the sprites that were clicked
@@ -181,7 +207,7 @@ class Manager(pygame.sprite.Group): #input manager class
 
 
 class Text(pygame.sprite.Sprite): #text object class
-    def __init__(self, text, font, color, pos=(0,0)):
+    def __init__(self, text, font, color, pos=None, anchor="nw"):
         super().__init__() #mkaes it a sprite
         self.font = font #text font
         self.text = text #the text string
@@ -189,13 +215,36 @@ class Text(pygame.sprite.Sprite): #text object class
         #renders the text
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = pos[0], pos[1]
+        match anchor.lower():
+            case "nw":
+                self.anchor = (0,0)
+            case "ne":
+                self.anchor = (-self.rect.width,0)
+            case "n":
+                self.anchor = (-self.rect.width/2,0)
+            case "w":
+                self.anchor = (-self.rect.width/2,0)
+            case "center":
+                self.anchor = (-self.rect.width/2,-self.rect.height/2)
+            case "e":
+                self.anchor = (-self.rect.width,-self.rect.height/2)
+            case "sw":
+                self.anchor = (0,-self.rect.height)
+            case "s":
+                self.anchor = (-self.rect.width/2,-self.rect.height)
+            case "se":
+                self.anchor = (-self.rect.width,-self.rect.height)
+        try:
+            self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1]
+        except Exception:
+            pass
+        self.pos = pos
 
     def draw(self, surface): #draw function
         surface.blit(self.image, self.rect)
 
 class Button(pygame.sprite.Sprite): #button object class
-    def __init__(self, text, font, color, pos=(0,0),command=None, isdropdown=False): #isdropdown is not used by users
+    def __init__(self, text, font, color, pos=None,command=None, isdropdown=False,anchor="nw"): #isdropdown is not used by users
         super().__init__() #makes it a sprite
         self.font = font # text font
         self.text = text #text string
@@ -205,13 +254,49 @@ class Button(pygame.sprite.Sprite): #button object class
         #renders the button
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = pos[0], pos[1]
+        self.rect = self.image.get_rect()
+        match anchor.lower():
+            case "nw":
+                self.anchor = (0,0)
+            case "ne":
+                self.anchor = (-self.rect.width,0)
+            case "n":
+                self.anchor = (-self.rect.width/2,0)
+            case "w":
+                self.anchor = (-self.rect.width/2,0)
+            case "center":
+                self.anchor = (-self.rect.width/2,-self.rect.height/2)
+            case "e":
+                self.anchor = (-self.rect.width,-self.rect.height/2)
+            case "sw":
+                self.anchor = (0,-self.rect.height)
+            case "s":
+                self.anchor = (-self.rect.width/2,-self.rect.height)
+            case "se":
+                self.anchor = (-self.rect.width,-self.rect.height)
+        try:
+            self.rect.x = pos[0] +self.anchor[0]
+            self.rect.y = pos[1]+self.anchor[1]
+            
+        except Exception:
+            print(self.text)
+            pass
+        #self.rect.width += 10; self.rect.height += 10
+        self.pos = pos
+
 
     def draw(self, surface): #draw function
+        width = 5
+        #draws the border rectangle around the text input
+        pygame.draw.line(surface,self.color,(int(self.rect.x),int(self.rect.y)),(int(self.rect.x) + self.rect.width,int(self.rect.y)), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x) + self.rect.width,int(self.rect.y)),(int(self.rect.x) + self.rect.width,int(self.rect.y) + self.rect.height), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x) + self.rect.width,int(self.rect.y) + self.rect.height),(int(self.rect.x),int(self.rect.y) + self.rect.height), width=width)
+        pygame.draw.line(surface,self.color,(int(self.rect.x),int(self.rect.y) + self.rect.height),(int(self.rect.x),int(self.rect.y)), width=width)
+
         surface.blit(self.image, self.rect)
 
 class Dropdown(pygame.sprite.Sprite): #dropdown class
-    def __init__(self, text, font, color,bgcolor="white", pos=(0,0),values=[],scaleFactor=1):
+    def __init__(self, text, font, color,bgcolor="white", pos=None,values=[],scaleFactor=1,anchor="nw"):
         super().__init__() #makes it a sprite
         self.font = font #font for dropdown object and th emenu objects
         self.text = text #placeholder text string
@@ -222,7 +307,31 @@ class Dropdown(pygame.sprite.Sprite): #dropdown class
         #renders the dropdown
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = pos[0], pos[1]
+        self.rect = self.image.get_rect()
+        match anchor.lower():
+            case "nw":
+                self.anchor = (0,0)
+            case "ne":
+                self.anchor = (-self.rect.width,0)
+            case "n":
+                self.anchor = (-self.rect.width/2,0)
+            case "w":
+                self.anchor = (-self.rect.width/2,0)
+            case "center":
+                self.anchor = (-self.rect.width/2,-self.rect.height/2)
+            case "e":
+                self.anchor = (-self.rect.width,-self.rect.height/2)
+            case "sw":
+                self.anchor = (0,-self.rect.height)
+            case "s":
+                self.anchor = (-self.rect.width/2,-self.rect.height)
+            case "se":
+                self.anchor = (-self.rect.width,-self.rect.height)
+        try:
+            self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1]
+        except Exception:
+            pass
+        self.pos = pos
         #mkaes the entries in the dropdown menu
         self.entries = []
         
@@ -259,7 +368,7 @@ class Dropdown(pygame.sprite.Sprite): #dropdown class
                         group.add(e)
 
 class TextInput(pygame.sprite.Sprite): #text input class
-    def __init__(self, text, font, color, pos=(0,0)):
+    def __init__(self, text, font, color, pos=None, anchor="nw"):
         super().__init__() #makes it a sprite
         self.font = font #font color
         self.text = text #placeholder string
@@ -268,7 +377,31 @@ class TextInput(pygame.sprite.Sprite): #text input class
         #renders the text input
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = pos[0], pos[1]
+        self.rect = self.image.get_rect()
+        match anchor.lower():
+            case "nw":
+                self.anchor = (0,0)
+            case "ne":
+                self.anchor = (-self.rect.width,0)
+            case "n":
+                self.anchor = (-self.rect.width/2,0)
+            case "w":
+                self.anchor = (-self.rect.width/2,0)
+            case "center":
+                self.anchor = (-self.rect.width/2,-self.rect.height/2)
+            case "e":
+                self.anchor = (-self.rect.width,-self.rect.height/2)
+            case "sw":
+                self.anchor = (0,-self.rect.height)
+            case "s":
+                self.anchor = (-self.rect.width/2,-self.rect.height)
+            case "se":
+                self.anchor = (-self.rect.width,-self.rect.height)
+        try:
+            self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1]
+        except Exception:
+            pass
+        self.pos = pos
 
     def draw(self, surface): #draw function
         if self.selected: #makes the border thicker if its selected
@@ -287,22 +420,22 @@ class TextInput(pygame.sprite.Sprite): #text input class
 
 
 if debug and __name__ == "__main__": #runs if im debugging
-    test_button = Button("Test", font, (255, 255, 255), (640, 450), lambda: print("test")) #test button
+    test_button = Button("Test", font, (255, 255, 255), command=lambda: print("test")) #test button
 
     #test menu
     bg = Menu("You Lose!", "white", font, 600, 600,"red")
     bg.rect.x = 300
-    bg.rect.y = 200
+    bg.rect.y = 100
     all_sprites.add(bg)
 
     #adds the test button and a test text object to the menu
     bg.add(test_button)
-    bg.add(Text("Test", font, (255, 255, 255), (640, 450)))
+    bg.add(Text("Test", font, (255, 255, 255), (300, 600), anchor="s"))
 
     man = Manager() #makes a test input manager 
 
-    d = Dropdown("dropdown", font, "white", "black", (300,300),["test","test2","test3","test4"], scaleFactor=0.5) #makes a test dropdown
-    ti = TextInput("Test", font, (255, 255, 255), (640, 450)) #test text inoput
+    d = Dropdown("dropdown", font, "white", "black",values=["test","test2","test3","test4"], scaleFactor=0.5) #makes a test dropdown
+    ti = TextInput("Test", font, (255, 255, 255)) #test text inoput
     #adds the text input and dropdown to the menu
     bg.add(ti)
     bg.add(d)
