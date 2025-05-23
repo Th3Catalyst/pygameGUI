@@ -1,4 +1,6 @@
 import pygame
+import asyncio
+
 
 #set to false by default, true allows me to test features
 debug = True
@@ -35,6 +37,10 @@ class Menu(pygame.sprite.Sprite): #base menu class
         self.height = height #height of the menu
         self.sprites = Manager() #group that all the objects of the menu are in
         self.titlecolor = titlecolor #color of the menu ttitle
+
+
+        self.margin = 10
+        self.padding = 0
         match anchor.lower():
             case "nw":
                 self.anchor = (0,0)
@@ -62,16 +68,18 @@ class Menu(pygame.sprite.Sprite): #base menu class
         self.selectedInput = None #text input that is selected
         self.caps = False #capslock variable
 
-        self.listAmt = 0
+        self.listHeight = 0
+
+        self.titleT = self.font.render(self.title, True, self.titlecolor) 
+        self.titleTRect = self.titleT.get_rect(center=(self.rect.x + self.width/2, self.rect.y + 50))
 
     def draw(self, screen): #draw function
         screen.blit(self.image, self.rect) #draws the menu background
         #renders the title text
-        titleT = self.font.render(self.title, True, self.titlecolor) 
-        titleTRect = titleT.get_rect(center=(self.rect.x + self.width/2, self.rect.y + 50))
-        screen.blit(titleT, (self.rect.x +self.width/2 - titleTRect.width/2, self.rect.y + 50 - titleTRect.height/2.5))
+
+        screen.blit(self.titleT, (self.rect.x +self.width/2 - self.titleTRect.width/2, self.rect.y + 50 - self.titleTRect.height/2.5))
         #draws the separating line from the title to the menu elements
-        pygame.draw.line(screen, self.hrcolor, (self.rect.x + 20, self.rect.y + 60 + titleTRect.height / 2), (self.rect.x + self.width - 20, self.rect.y + 60 + titleTRect.height / 2), width=5)
+        pygame.draw.line(screen, self.hrcolor, (self.rect.x + 20, self.rect.y + 60 + self.titleTRect.height / 2), (self.rect.x + self.width - 20, self.rect.y + 60 + self.titleTRect.height / 2), width=5)
         
         #draws all the menu elements to the screen
         for s in self.sprites:
@@ -88,12 +96,16 @@ class Menu(pygame.sprite.Sprite): #base menu class
         self.sprites.add(sprite)
         #puts the element below the previous one
         if not sprite.pos:
-            self.listAmt +=1
             sprite.rect.x = self.rect.x + (self.width - sprite.rect.width) / 2
-            sprite.rect.y = self.rect.y + 70*(self.listAmt+1) - 30
+            sprite.rect.y = self.rect.y + (self.listHeight) + self.titleTRect.height +40 + sprite.padding +sprite.margin
+            self.listHeight += sprite.rect.height + sprite.padding*2 +sprite.margin*2
+            try:
+                self.listHeight += sprite.borderWidth*2
+            except Exception:
+                pass
         else:
-            sprite.rect.x = self.rect.x + sprite.pos[0] + sprite.anchor[0]
-            sprite.rect.y = self.rect.y + sprite.pos[1] + sprite.anchor[1]
+            sprite.rect.x = self.rect.x + sprite.pos[0] + sprite.anchor[0] + sprite.padding 
+            sprite.rect.y = self.rect.y + sprite.pos[1] + sprite.anchor[1] + sprite.padding 
     
     def click(self): #function that handles menu element clicks for buttons
         #mkaes a list of the sprites that were clicked
@@ -118,7 +130,15 @@ class Menu(pygame.sprite.Sprite): #base menu class
                 self.selectedInput = s #sets the selected input to be the clicked one
                 s.selected = True #tells the text input its selected
     
+    async def hover(self):
+        pos = pygame.mouse.get_pos()
+        for s in self.sprites:
+            if isinstance(s,Button) and s.rect.collidepoint(pos):
+                print("hover")
+
+
     def input(self,event): #function that handles all inputs for the menu elements
+
         if event.type == pygame.MOUSEBUTTONUP: #runs when the user clicks their mouse
             if self.selectedInput: #deselects a text input if it is selected
                 self.selectedInput.selected = False
@@ -215,6 +235,11 @@ class Text(pygame.sprite.Sprite): #text object class
         #renders the text
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
+
+
+        self.margin = 10
+        self.padding = 0
+
         match anchor.lower():
             case "nw":
                 self.anchor = (0,0)
@@ -244,17 +269,24 @@ class Text(pygame.sprite.Sprite): #text object class
         surface.blit(self.image, self.rect)
 
 class Button(pygame.sprite.Sprite): #button object class
-    def __init__(self, text, font, color, pos=None,command=None, isdropdown=False,anchor="nw"): #isdropdown is not used by users
+    def __init__(self, text, font, color, pos=None,command=None,bordercolor="black",bgcolor="grey",bgcolorHover="#cccccc",anchor="nw", isdropdown=False): #isdropdown is not used by users
         super().__init__() #makes it a sprite
         self.font = font # text font
         self.text = text #text string
         self.color = color #text color
         self.command = command #button function
         self.isdropdown = isdropdown #if the button is a dropdown element
+        self.borderColor = bordercolor
+        self.bgcolor = bgcolor
+        self.bgcolorHover = bgcolorHover
         #renders the button
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect = self.image.get_rect()
+
+        self.margin = 10
+        self.padding = 5
+
+        self.borderWidth = 5
         match anchor.lower():
             case "nw":
                 self.anchor = (0,0)
@@ -275,8 +307,8 @@ class Button(pygame.sprite.Sprite): #button object class
             case "se":
                 self.anchor = (-self.rect.width,-self.rect.height)
         try:
-            self.rect.x = pos[0] +self.anchor[0]
-            self.rect.y = pos[1]+self.anchor[1]
+            self.rect.x = pos[0] + self.anchor[0]
+            self.rect.y = pos[1] + self.anchor[1]
             
         except Exception:
             print(self.text)
@@ -286,13 +318,14 @@ class Button(pygame.sprite.Sprite): #button object class
 
 
     def draw(self, surface): #draw function
-        width = 5
+        width = self.borderWidth
         #draws the border rectangle around the text input
-        pygame.draw.line(surface,self.color,(int(self.rect.x),int(self.rect.y)),(int(self.rect.x) + self.rect.width,int(self.rect.y)), width=width)
-        pygame.draw.line(surface,self.color,(int(self.rect.x) + self.rect.width,int(self.rect.y)),(int(self.rect.x) + self.rect.width,int(self.rect.y) + self.rect.height), width=width)
-        pygame.draw.line(surface,self.color,(int(self.rect.x) + self.rect.width,int(self.rect.y) + self.rect.height),(int(self.rect.x),int(self.rect.y) + self.rect.height), width=width)
-        pygame.draw.line(surface,self.color,(int(self.rect.x),int(self.rect.y) + self.rect.height),(int(self.rect.x),int(self.rect.y)), width=width)
+        pygame.draw.line(surface,self.borderColor,(int(self.rect.x- self.padding),int(self.rect.y- self.padding)),(int(self.rect.x+ self.padding) + self.rect.width,int(self.rect.y- self.padding)), width=width)
+        pygame.draw.line(surface,self.borderColor,(int(self.rect.x+ self.padding) + self.rect.width,int(self.rect.y- self.padding)),(int(self.rect.x+ self.padding) + self.rect.width,int(self.rect.y+ self.padding) + self.rect.height), width=width)
+        pygame.draw.line(surface,self.borderColor,(int(self.rect.x+ self.padding) + self.rect.width,int(self.rect.y+ self.padding) + self.rect.height),(int(self.rect.x - self.padding),int(self.rect.y + self.padding) + self.rect.height), width=width)
+        pygame.draw.line(surface,self.borderColor,(int(self.rect.x - self.padding),int(self.rect.y + self.padding) + self.rect.height),(int(self.rect.x - self.padding),int(self.rect.y - self.padding)), width=width)
 
+        pygame.draw.rect(surface,self.bgcolor, (self.rect.x - self.padding,self.rect.y - self.padding, self.rect.width + self.padding*2,self.rect.height + self.padding*2))
         surface.blit(self.image, self.rect)
 
 class Dropdown(pygame.sprite.Sprite): #dropdown class
@@ -307,7 +340,10 @@ class Dropdown(pygame.sprite.Sprite): #dropdown class
         #renders the dropdown
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect = self.image.get_rect()
+
+        self.margin = 10
+        self.padding = 0
+
         match anchor.lower():
             case "nw":
                 self.anchor = (0,0)
@@ -377,7 +413,13 @@ class TextInput(pygame.sprite.Sprite): #text input class
         #renders the text input
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
-        self.rect = self.image.get_rect()
+
+        self.margin = 10
+        self.padding = 0
+
+        self.borderWidth = 1
+        self.borderFocused = 5
+
         match anchor.lower():
             case "nw":
                 self.anchor = (0,0)
@@ -405,9 +447,9 @@ class TextInput(pygame.sprite.Sprite): #text input class
 
     def draw(self, surface): #draw function
         if self.selected: #makes the border thicker if its selected
-            width = 5
+            width = self.borderFocused
         else:
-            width = 1
+            width = self.borderWidth
         #draws the border rectangle around the text input
         pygame.draw.line(surface,self.color,(int(self.rect.x-10),int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)), width=width)
         pygame.draw.line(surface,self.color,(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10)),(int(self.rect.x-10) + self.rect.width +20,int(self.rect.y-10) + self.rect.height +10), width=width)
@@ -442,6 +484,7 @@ if debug and __name__ == "__main__": #runs if im debugging
     while running: #game loop
         for event in pygame.event.get(): #polls for events
             bg.input(event) #runs the input function for the menu
+            asyncio.run(bg.hover())
             #man.input(event) #runs the input function for the manager
             if event.type == pygame.QUIT: #runs when the user presses the "x"
                 running = False
