@@ -3,7 +3,7 @@ import asyncio
 
 
 #set to false by default, true allows me to test features
-debug = True
+debug = False
 if debug and __name__=="__main__":
     #make a new screen
     pygame.init()
