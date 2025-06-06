@@ -1,9 +1,115 @@
+
 import pygame
 import asyncio
+import json
+from enum import Enum
+import config
 
+
+try:
+    with open(config.file,'r') as f:
+        data = json.load(f)
+        buttonStyle = data["button"]
+        class ButtonStyles(Enum):
+            
+            try: margin = buttonStyle['margin']
+            except Exception: margin = 10
+            try: padding = buttonStyle['padding']
+            except Exception: padding = 0
+            try: color = buttonStyle['color']
+            except Exception: color = "black"
+            try: bordercolor = buttonStyle['bordercolor']
+            except Exception: bordercolor = "black"
+            try: bgcolor = buttonStyle['bgcolor']
+            except Exception: bgcolor = "grey"
+            try: bgcolorHover = buttonStyle['bgcolorHover']
+            except Exception: bgcolorHover = "light grey"
+            try: anchor = buttonStyle['anchor']
+            except Exception: anchor = "nw"
+except Exception:
+    class ButtonStyles(Enum):
+            margin = 10
+            padding = 0
+            bordercolor = "black"
+            bgcolor = "grey"
+            bgcolorHover = "light grey"
+            anchor = "nw"
+            color = "black"
+try:
+    with open(config.file,'r') as f:
+        data = json.load(f)
+        menuStyle = data["menu"]
+        class MenuStyles(Enum):
+            try: margin = menuStyle['margin']
+            except Exception: margin = 10
+            try: padding = menuStyle['padding']
+            except Exception: padding = 0
+            try: bgcolor = menuStyle['bgcolor']
+            except Exception: bgcolor = "grey"
+            try: titlecolor = menuStyle['titlecolor']
+            except Exception: titlecolor = "white"
+            try: hrcolor = menuStyle['hrcolor']
+            except Exception: hrcolor = "black"
+            try: anchor = menuStyle['anchor']
+            except Exception: anchor = "nw"
+except Exception:
+    class MenuStyles(Enum):
+            margin = 10
+            padding = 0
+            bgcolor = "grey"
+            anchor = "nw"
+            titlecolor = "white"
+            hrcolor = "black"
+try:
+    with open(config.file,'r') as f:
+        data = json.load(f)
+        textStyle = data["text"]
+        class TextStyles(Enum):
+            try: margin = textStyle['margin']
+            except Exception: margin = 10
+            try: padding = textStyle['padding']
+            except Exception: padding = 0
+            try: anchor = textStyle['anchor']
+            except Exception: anchor = "nw"
+            try: color = textStyle['color']
+            except Exception: color = "black"
+except Exception:
+    class TextStyles(Enum):
+            margin = 10
+            padding = 0
+            anchor = "nw"
+            color = "black"
+try: 
+    with open(config.file,'r') as f:
+        data = json.load(f)
+        DropdownStyle = data["dropdown"]
+        class DropdownStyles(Enum):
+            try: margin = DropdownStyle['margin']
+            except Exception: margin = 10
+            try: padding = DropdownStyle['padding']
+            except Exception: padding = 0
+            try: anchor = DropdownStyle['anchor']
+            except Exception: anchor = "nw"
+            try: color = DropdownStyle['color']
+            except Exception: color = "black"
+            try: bgcolor = DropdownStyle['bgcolor']
+            except Exception: bgcolor = "white"
+            try: scaleFactor = DropdownStyle['scaleFactor']
+            except Exception: scaleFactor = 1
+            try: anchor = DropdownStyle['anchor']
+            except Exception: anchor = "nw"
+except Exception:
+    class DropdownStyles(Enum):
+            margin = 10
+            padding = 0
+            anchor = "nw"
+            color = "black"
+            bgcolor = "white"
+            scaleFactor = 1
+            anchor = "nw"
 
 #set to false by default, true allows me to test features
-debug = False
+debug = True
 if debug and __name__=="__main__":
     #make a new screen
     pygame.init()
@@ -16,9 +122,11 @@ if debug and __name__=="__main__":
 
 
 class Menu(pygame.sprite.Sprite): #base menu class
-    def __init__(self, title, titlecolor, font, width, height, color="red", image = None, pos=(0,0),hrcolor="black", anchor="nw"):
+    def __init__(self, title, titlecolor=MenuStyles.titlecolor.value, font='default', width=100, height=100, color=MenuStyles.bgcolor.value, image = None, pos=(0,0),hrcolor=MenuStyles.hrcolor.value, anchor=MenuStyles.anchor.value, margin=MenuStyles.margin.value,padding=MenuStyles.padding.value):
+
         super().__init__() #makes the menu a sprite
-        
+        if font == 'default':
+            font=pygame.font.Font('freesansbold.ttf', 70)
         #makes a rectangle the size of the sprite and fills it with the specified color if the user requested it
         self.image = pygame.Surface([width,height])
         self.image.fill(color)
@@ -38,10 +146,11 @@ class Menu(pygame.sprite.Sprite): #base menu class
         self.sprites = Manager() #group that all the objects of the menu are in
         self.titlecolor = titlecolor #color of the menu ttitle
 
+        #margin and padding WIP
+        self.margin = margin
+        self.padding = padding
 
-        self.margin = 10
-        self.padding = 0
-        match anchor.lower():
+        match anchor.lower():#determines offset based on anchor
             case "nw":
                 self.anchor = (0,0)
             case "ne":
@@ -61,15 +170,16 @@ class Menu(pygame.sprite.Sprite): #base menu class
             case "se":
                 self.anchor = (-self.rect.width,-self.rect.height)
         
-        self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1]
+        self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1] #positions the menu
         self.hrcolor = hrcolor #color of he line separtating the title from the menu elements
         
         #text input variables
         self.selectedInput = None #text input that is selected
         self.caps = False #capslock variable
 
-        self.listHeight = 0
+        self.listHeight = 0 #this is used to determine how far down each new menu element needs to be placed
 
+        #title text
         self.titleT = self.font.render(self.title, True, self.titlecolor) 
         self.titleTRect = self.titleT.get_rect(center=(self.rect.x + self.width/2, self.rect.y + 50))
 
@@ -94,16 +204,16 @@ class Menu(pygame.sprite.Sprite): #base menu class
     
     def add(self, sprite): #function to add an element to a menu
         self.sprites.add(sprite)
-        #puts the element below the previous one
+        #puts the element below the previous one in the list if it doesnt have a manual position
         if not sprite.pos:
-            sprite.rect.x = self.rect.x + (self.width - sprite.rect.width) / 2
-            sprite.rect.y = self.rect.y + (self.listHeight) + self.titleTRect.height +40 + sprite.padding +sprite.margin
-            self.listHeight += sprite.rect.height + sprite.padding*2 +sprite.margin*2
-            try:
+            sprite.rect.x = self.rect.x + (self.width - sprite.rect.width) / 2 #puts the element in the center
+            sprite.rect.y = self.rect.y + (self.listHeight) + self.titleTRect.height +40 + sprite.padding +sprite.margin #puts it below the previous one
+            self.listHeight += sprite.rect.height + sprite.padding*2 +sprite.margin*2 #makes the offset higher
+            try: #includes the borderwidth if the sprite has it
                 self.listHeight += sprite.borderWidth*2
             except Exception:
                 pass
-        else:
+        else: #positions the element based on manual coordinates if it has it
             sprite.rect.x = self.rect.x + sprite.pos[0] + sprite.anchor[0] + sprite.padding 
             sprite.rect.y = self.rect.y + sprite.pos[1] + sprite.anchor[1] + sprite.padding 
     
@@ -130,7 +240,7 @@ class Menu(pygame.sprite.Sprite): #base menu class
                 self.selectedInput = s #sets the selected input to be the clicked one
                 s.selected = True #tells the text input its selected
     
-    async def hover(self):
+    async def hover(self): #hover for buttons (WIP)
         pos = pygame.mouse.get_pos()
         for s in self.sprites:
             if isinstance(s,Button) and s.rect.collidepoint(pos):
@@ -227,7 +337,7 @@ class Manager(pygame.sprite.Group): #input manager class
 
 
 class Text(pygame.sprite.Sprite): #text object class
-    def __init__(self, text, font, color, pos=None, anchor="nw"):
+    def __init__(self, text, font, color, pos=None, anchor="nw", margin=10,padding=0):
         super().__init__() #mkaes it a sprite
         self.font = font #text font
         self.text = text #the text string
@@ -236,11 +346,11 @@ class Text(pygame.sprite.Sprite): #text object class
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
 
+        #margin and padding WIP
+        self.margin = margin
+        self.padding = padding
 
-        self.margin = 10
-        self.padding = 0
-
-        match anchor.lower():
+        match anchor.lower(): #determines the offset based on anchor
             case "nw":
                 self.anchor = (0,0)
             case "ne":
@@ -259,7 +369,7 @@ class Text(pygame.sprite.Sprite): #text object class
                 self.anchor = (-self.rect.width/2,-self.rect.height)
             case "se":
                 self.anchor = (-self.rect.width,-self.rect.height)
-        try:
+        try: #positions the text object if a pos variable was given
             self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1]
         except Exception:
             pass
@@ -269,7 +379,7 @@ class Text(pygame.sprite.Sprite): #text object class
         surface.blit(self.image, self.rect)
 
 class Button(pygame.sprite.Sprite): #button object class
-    def __init__(self, text, font, color, pos=None,command=None,bordercolor="black",bgcolor="grey",bgcolorHover="#cccccc",anchor="nw", isdropdown=False): #isdropdown is not used by users
+    def __init__(self, text, font, color=ButtonStyles.color.value, pos=None,command=None,bordercolor=ButtonStyles.bordercolor.value,bgcolor=ButtonStyles.bgcolor.value,bgcolorHover=ButtonStyles.bgcolor.value,anchor=ButtonStyles.anchor.value, margin=ButtonStyles.margin.value,padding=ButtonStyles.padding.value, isdropdown=False): #isdropdown is not used by users
         super().__init__() #makes it a sprite
         self.font = font # text font
         self.text = text #text string
@@ -283,11 +393,13 @@ class Button(pygame.sprite.Sprite): #button object class
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
 
-        self.margin = 10
-        self.padding = 5
+        #margin and padding WIP
+        self.margin = margin
+        self.padding = padding
 
-        self.borderWidth = 5
-        match anchor.lower():
+        self.borderWidth = 5 #width of button border (will be custom later)
+
+        match anchor.lower(): #determines the offset based on anchor
             case "nw":
                 self.anchor = (0,0)
             case "ne":
@@ -306,12 +418,11 @@ class Button(pygame.sprite.Sprite): #button object class
                 self.anchor = (-self.rect.width/2,-self.rect.height)
             case "se":
                 self.anchor = (-self.rect.width,-self.rect.height)
-        try:
+        try: #positions the button if a pos variable was given
             self.rect.x = pos[0] + self.anchor[0]
             self.rect.y = pos[1] + self.anchor[1]
             
         except Exception:
-            print(self.text)
             pass
         #self.rect.width += 10; self.rect.height += 10
         self.pos = pos
@@ -329,7 +440,7 @@ class Button(pygame.sprite.Sprite): #button object class
         surface.blit(self.image, self.rect)
 
 class Dropdown(pygame.sprite.Sprite): #dropdown class
-    def __init__(self, text, font, color,bgcolor="white", pos=None,values=[],scaleFactor=1,anchor="nw"):
+    def __init__(self, text, font, color=DropdownStyles.color.value,bgcolor=DropdownStyles.bgcolor.value, pos=None,values=[],scaleFactor=DropdownStyles.scaleFactor.value,anchor=DropdownStyles.anchor.value, margin=DropdownStyles.margin.value,padding=DropdownStyles.padding.value):
         super().__init__() #makes it a sprite
         self.font = font #font for dropdown object and th emenu objects
         self.text = text #placeholder text string
@@ -341,10 +452,11 @@ class Dropdown(pygame.sprite.Sprite): #dropdown class
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
 
-        self.margin = 10
-        self.padding = 0
+        #margin and padding WIP
+        self.margin = margin
+        self.padding = padding
 
-        match anchor.lower():
+        match anchor.lower(): #determines the offset for pos based on anchor
             case "nw":
                 self.anchor = (0,0)
             case "ne":
@@ -363,7 +475,7 @@ class Dropdown(pygame.sprite.Sprite): #dropdown class
                 self.anchor = (-self.rect.width/2,-self.rect.height)
             case "se":
                 self.anchor = (-self.rect.width,-self.rect.height)
-        try:
+        try: #positions the dropdown if a pos variable was given
             self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1]
         except Exception:
             pass
@@ -404,7 +516,7 @@ class Dropdown(pygame.sprite.Sprite): #dropdown class
                         group.add(e)
 
 class TextInput(pygame.sprite.Sprite): #text input class
-    def __init__(self, text, font, color, pos=None, anchor="nw"):
+    def __init__(self, text, font, color, pos=None, anchor="nw", margin=10,padding=0):
         super().__init__() #makes it a sprite
         self.font = font #font color
         self.text = text #placeholder string
@@ -414,13 +526,14 @@ class TextInput(pygame.sprite.Sprite): #text input class
         self.image = self.font.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
 
-        self.margin = 10
-        self.padding = 0
+        #margin and padding WIP
+        self.margin = margin
+        self.padding = padding
 
-        self.borderWidth = 1
-        self.borderFocused = 5
+        self.borderWidth = 1 #default width
+        self.borderFocused = 5 #width when typing
 
-        match anchor.lower():
+        match anchor.lower(): #determines the offset the position should be at based on anchor
             case "nw":
                 self.anchor = (0,0)
             case "ne":
@@ -439,7 +552,7 @@ class TextInput(pygame.sprite.Sprite): #text input class
                 self.anchor = (-self.rect.width/2,-self.rect.height)
             case "se":
                 self.anchor = (-self.rect.width,-self.rect.height)
-        try:
+        try: #positions the textinput if a pos variable was given
             self.rect.x, self.rect.y = pos[0] +self.anchor[0], pos[1]+self.anchor[1]
         except Exception:
             pass
