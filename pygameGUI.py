@@ -3,8 +3,10 @@ import pygame
 import asyncio
 import json
 from enum import Enum
-import config
-
+try:
+    import config
+except Exception:
+    pass
 
 try:
     with open(config.file,'r') as f:
@@ -22,10 +24,12 @@ try:
             except Exception: bordercolor = "black"
             try: bgcolor = buttonStyle['bgcolor']
             except Exception: bgcolor = "grey"
-            try: bgcolorHover = buttonStyle['bgcolorHover']
+            try: bgcolorHover = buttonStyle['bgcolorhover']
             except Exception: bgcolorHover = "light grey"
             try: anchor = buttonStyle['anchor']
             except Exception: anchor = "nw"
+            try: borderWidth = buttonStyle['borderwidth']
+            except Exception: borderWidth = 5
 except Exception:
     class ButtonStyles(Enum):
             margin = 10
@@ -35,6 +39,7 @@ except Exception:
             bgcolorHover = "light grey"
             anchor = "nw"
             color = "black"
+            borderWidth = 5
 try:
     with open(config.file,'r') as f:
         data = json.load(f)
@@ -96,8 +101,6 @@ try:
             except Exception: bgcolor = "white"
             try: scaleFactor = DropdownStyle['scaleFactor']
             except Exception: scaleFactor = 1
-            try: anchor = DropdownStyle['anchor']
-            except Exception: anchor = "nw"
 except Exception:
     class DropdownStyles(Enum):
             margin = 10
@@ -106,8 +109,37 @@ except Exception:
             color = "black"
             bgcolor = "white"
             scaleFactor = 1
+try:  
+    with open(config.file,'r') as f:
+        data = json.load(f)
+        textinputStyle = data["textinput"]
+        class TextInputStyles(Enum):
+            
+            try: margin = textinputStyle['margin']
+            except Exception: margin = 10
+            try: padding = textinputStyle['padding']
+            except Exception: padding = 0
+            try: color = textinputStyle['color']
+            except Exception: color = "black"
+            try: bordercolor = textinputStyle['bordercolor']
+            except Exception: bordercolor = "black"
+            try: anchor = textinputStyle['anchor']
+            except Exception: anchor = "nw"
+            try: borderWidth = textinputStyle['borderwidth']
+            except Exception: borderWidth = 1
+            try: borderWidthFocus = textinputStyle['borderwidthfocus']
+            except Exception: borderWidthFocus = 5
+except Exception:
+    class TextInputStyles(Enum):
+            margin = 10
+            padding = 0
+            bordercolor = "black"
+            bgcolor = "grey"
+            bgcolorHover = "light grey"
             anchor = "nw"
-
+            color = "black"
+            borderWidth = 5
+            borderWidthFocus = 5
 #set to false by default, true allows me to test features
 debug = True
 if debug and __name__=="__main__":
@@ -255,6 +287,9 @@ class Menu(pygame.sprite.Sprite): #base menu class
                 self.selectedInput = None
             self.click() #runs the click input
         if event.type == pygame.KEYDOWN and self.selectedInput: #key presses for the text input
+            if self.selectedInput.DrPlaceholderMcDoctoratePhD:
+                self.selectedInput.text = ""
+                self.selectedInput.DrPlaceholderMcDoctoratePhD = False
             if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE: #deselects the text input if enter or escape is pressed
                 self.selectedInput.selected = False
                 self.selectedInput = None
@@ -269,10 +304,12 @@ class Menu(pygame.sprite.Sprite): #base menu class
                         char = chr(event.key).upper() #stores an uppercase letter
                     self.selectedInput.text += char if char else "" #adds the character to the text input string
                     #rerenders the textinput with the new string
+                    #temppos = (self.selectedInput.rect.x-self.selectedInput.anchor[0],self.selecetInput.rect.y-self.selectedInput.anchor[1])
                     self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
                     temprect = self.selectedInput.image.get_rect()
                     self.selectedInput.rect.width = temprect.width
                     self.selectedInput.rect.height = temprect.height
+                    #self.selectedInput.rect.x = temppos[0] +
 
                 except:
                     if event.key == pygame.K_CAPSLOCK: #capslock functionality
@@ -306,33 +343,38 @@ class Manager(pygame.sprite.Group): #input manager class
                 self.selectedInput = s
                 s.selected = True
     
-    def input(self,event): #input function (same as from menu)
-        if event.type == pygame.MOUSEBUTTONUP:
-            if self.selectedInput:
+    def input(self,event): #function that handles all inputs for the menu elements
+
+        if event.type == pygame.MOUSEBUTTONUP: #runs when the user clicks their mouse
+            if self.selectedInput: #deselects a text input if it is selected
                 self.selectedInput.selected = False
                 self.selectedInput = None
-            self.click()
-        if event.type == pygame.KEYDOWN and self.selectedInput:
-            if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
+            self.click() #runs the click input
+        if event.type == pygame.KEYDOWN and self.selectedInput: #key presses for the text input
+            if self.selectedInput.DrPlaceholderMcDoctoratePhD:
+                self.selectedInput.text = ""
+                self.selectedInput.DrPlaceholderMcDoctoratePhD = False
+            if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE: #deselects the text input if enter or escape is pressed
                 self.selectedInput.selected = False
                 self.selectedInput = None
             else:
                 try:
-                    if event.key == pygame.K_BACKSPACE:
+                    if event.key == pygame.K_BACKSPACE: #deletes a character from the text input string 
                         self.selectedInput.text = self.selectedInput.text[0:-1]
                         char = None
                     elif not self.caps and not pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        char = chr(event.key)
+                        char = chr(event.key) #stores a lowercase letter
                     else: 
-                        char = chr(event.key).upper()
-                    self.selectedInput.text += char if char else ""
+                        char = chr(event.key).upper() #stores an uppercase letter
+                    self.selectedInput.text += char if char else "" #adds the character to the text input string
+                    #rerenders the textinput with the new string
                     self.selectedInput.image = self.selectedInput.font.render(self.selectedInput.text, True, self.selectedInput.color)
                     temprect = self.selectedInput.image.get_rect()
                     self.selectedInput.rect.width = temprect.width
                     self.selectedInput.rect.height = temprect.height
 
                 except:
-                    if event.key == pygame.K_CAPSLOCK:
+                    if event.key == pygame.K_CAPSLOCK: #capslock functionality
                         self.caps = not self.caps
 
 
@@ -379,7 +421,7 @@ class Text(pygame.sprite.Sprite): #text object class
         surface.blit(self.image, self.rect)
 
 class Button(pygame.sprite.Sprite): #button object class
-    def __init__(self, text, font, color=ButtonStyles.color.value, pos=None,command=None,bordercolor=ButtonStyles.bordercolor.value,bgcolor=ButtonStyles.bgcolor.value,bgcolorHover=ButtonStyles.bgcolor.value,anchor=ButtonStyles.anchor.value, margin=ButtonStyles.margin.value,padding=ButtonStyles.padding.value, isdropdown=False): #isdropdown is not used by users
+    def __init__(self, text, font, color=ButtonStyles.color.value, pos=None,command=None,bordercolor=ButtonStyles.bordercolor.value,bgcolor=ButtonStyles.bgcolor.value,bgcolorHover=ButtonStyles.bgcolor.value,anchor=ButtonStyles.anchor.value, margin=ButtonStyles.margin.value,padding=ButtonStyles.padding.value, borderWidth=ButtonStyles.borderWidth.value, isdropdown=False): #isdropdown is not used by users
         super().__init__() #makes it a sprite
         self.font = font # text font
         self.text = text #text string
@@ -397,7 +439,7 @@ class Button(pygame.sprite.Sprite): #button object class
         self.margin = margin
         self.padding = padding
 
-        self.borderWidth = 5 #width of button border (will be custom later)
+        self.borderWidth = borderWidth #width of button border (will be custom later)
 
         match anchor.lower(): #determines the offset based on anchor
             case "nw":
@@ -516,7 +558,7 @@ class Dropdown(pygame.sprite.Sprite): #dropdown class
                         group.add(e)
 
 class TextInput(pygame.sprite.Sprite): #text input class
-    def __init__(self, text, font, color, pos=None, anchor="nw", margin=10,padding=0):
+    def __init__(self, text, font, color=TextInputStyles.color.value, pos=None, anchor=TextInputStyles.anchor.value, margin=TextInputStyles.margin.value,padding=TextInputStyles.padding.value, borderWidth=TextInputStyles.borderWidth.value, borderWidthFocus=TextInputStyles.borderWidthFocus.value):
         super().__init__() #makes it a sprite
         self.font = font #font color
         self.text = text #placeholder string
@@ -530,8 +572,10 @@ class TextInput(pygame.sprite.Sprite): #text input class
         self.margin = margin
         self.padding = padding
 
-        self.borderWidth = 1 #default width
-        self.borderFocused = 5 #width when typing
+        self.borderWidth = borderWidth #default width
+        self.borderFocused = borderWidthFocus #width when typing
+
+        self.DrPlaceholderMcDoctoratePhD = True
 
         match anchor.lower(): #determines the offset the position should be at based on anchor
             case "nw":
