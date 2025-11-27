@@ -1,5 +1,5 @@
 # pygameGUI
-A custom GUI library for pygame.
+A custom GUI library for pygame. \\
 `pip install -i https://test.pypi.org/simple/ pygGUI`
 ## Classes
 
