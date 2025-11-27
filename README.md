@@ -1,6 +1,6 @@
 # pygameGUI
 A custom GUI library for pygame.
-
+`pip install -i https://test.pypi.org/simple/ pygGUI`
 ## Classes
 
 ### pygameGUI.Text(text,font,color, pos = (0,0))
@@ -32,6 +32,31 @@ ARGS:
 - image (image link): background image
 - pos (2 tuple): top left corner of the menu
 - hrcolor (3 tuple, string, hex code): the color of the horizontal rule under the title
+
+
+### pygameGUI.Dropdown(text, font, color,bgcolor="white", pos=(0,0),values=[],scaleFactor=1):
+creates a dropdown that can be added to a menu. In order to use it properly you must add the dropdown to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanager) or a menu.
+ARGS:
+- text (string): the placeholder text
+- font (pygame.font.Font object): text font
+- color (3 tuple, string, hex code): text color
+- bgcolor (3 tuple, string, hex code): color of the background of the list
+- pos (2 tuple): top left corner of the dropdown
+- values (list of strings): the options in the dropdown
+- scaleFactor (num): the size of the list objects relative to the main text
+
+Use the `.text` attribute to get the value of the dropdown.
+
+### pygameGUI.TextInput(text, font, color, pos=(0,0)):
+creates a text input object that can be added to a menu. In order to use it properly you must add the dropdown to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanager) or a menu. 
+ARGS:
+- text (string): the text displayed
+- font (pygame.font.Font object): text font
+- color (3 tuple, string, hex code): text color
+- pos (2 tuple): top left corner of the text
+
+Use the `.text` attribute to get the text input's value.
+
 
 ### Here is an example of this code:
 ```
@@ -159,25 +184,3 @@ while running:
 # ...
 ```
 
-### pygameGUI.Dropdown(text, font, color,bgcolor="white", pos=(0,0),values=[],scaleFactor=1):
-creates a dropdown that can be added to a menu. In order to use it properly you must add the dropdown to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanager) or a menu.
-ARGS:
-- text (string): the placeholder text
-- font (pygame.font.Font object): text font
-- color (3 tuple, string, hex code): text color
-- bgcolor (3 tuple, string, hex code): color of the background of the list
-- pos (2 tuple): top left corner of the dropdown
-- values (list of strings): the options in the dropdown
-- scaleFactor (num): the size of the list objects relative to the main text
-
-Use the `.text` attribute to get the value of the dropdown.
-
-### pygameGUI.TextInput(text, font, color, pos=(0,0)):
-creates a text input object that can be added to a menu. In order to use it properly you must add the dropdown to a [Manager](https://github.com/Th3Catalyst/pygameGUI?tab=readme-ov-file#pygameguimanager) or a menu. 
-ARGS:
-- text (string): the text displayed
-- font (pygame.font.Font object): text font
-- color (3 tuple, string, hex code): text color
-- pos (2 tuple): top left corner of the text
-
-Use the `.text` attribute to get the text input's value.
